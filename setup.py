@@ -4,21 +4,21 @@ with open("README.rst") as readme_file:
     readme = readme_file.read()
 
 setup(
-    name="poindent",
+    name="powrap",
     version="0.1.1",
     description="Find an properly reindent .po files.",
     long_description=readme,
     author="Julien Palard",
     author_email="julien@palard.fr",
-    url="https://github.com/JulienPalard/poindent",
-    packages=["poindent"],
-    package_dir={"poindent": "poindent"},
-    entry_points={"console_scripts": ["poindent=poindent.poindent:main"]},
+    url="https://github.com/JulienPalard/powrap",
+    packages=["powrap"],
+    package_dir={"powrap": "powrap"},
+    entry_points={"console_scripts": ["powrap=powrap.powrap:main"]},
     include_package_data=True,
     install_requires=["tqdm"],
     license="MIT license",
     zip_safe=False,
-    keywords="poindent",
+    keywords="powrap",
     classifiers=[
         "Development Status :: 2 - Pre-Alpha",
         "Intended Audience :: Developers",
