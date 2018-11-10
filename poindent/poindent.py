@@ -30,7 +30,6 @@ def fix_style(po_files, modified=False, no_wrap=False):
         args = ["msgcat", "-", "-o", po_path]
         if no_wrap:
             args[1:1] = ["--no-wrap"]
-        print(args)
         run(args, universal_newlines=True, check=True, input=po_content)
 
 
