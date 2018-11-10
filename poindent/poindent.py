@@ -1,16 +1,10 @@
 #!/usr/bin/env python3
 
 """Fix style of uncommited po files, or all if --all is given.
-
-The "tac|tac" trick is an equivalent to "sponge" but as tac is in
-coreutils we're avoiding you to install a new packet.  Without
-`tac|tac` or `sponge`, `msgcat` may start to write in the po file
-before having finised to read it, yielding unpredictible behavior.
-(Yep we also can write to another file and mv it, like sed -i does.)
 """
 
 from shlex import quote
-from subprocess import check_output
+from subprocess import check_output, run
 
 from tqdm import tqdm
 
@@ -26,10 +20,14 @@ def fix_style(po_files, modified=False, no_wrap=False):
                             if line]
         po_files.extend(filename for status, filename in git_status_lines
                         if filename.endswith('.po'))
-    for po_file in tqdm(po_files, desc="Fixing indentation in po files"):
-        check_output('tac {} | tac | msgcat - -o {} {}'.format(
-            quote(po_file), quote(po_file), '--no-wrap' if no_wrap else ''),
-                     shell=True)
+    for po_path in tqdm(po_files, desc="Fixing indentation in po files"):
+        with open(po_path, encoding='UTF-8') as po_file:
+            po_content = po_file.read()
+        args = ['msgcat', '-', '-o', po_path]
+        if no_wrap:
+            args[1:1] = ['--no-wrap']
+        print(args)
+        run(args, universal_newlines=True, check=True, input=po_content)
 
 
 def main():
