@@ -37,7 +37,8 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(
-        description="Ensure po files are using the standard gettext format"
+        prog="powrap",
+        description="Ensure po files are using the standard gettext format",
     )
     parser.add_argument(
         "--modified", "-m", action="store_true", help="Use git to find modified files."
