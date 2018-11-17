@@ -13,9 +13,7 @@ def fix_style(po_files, modified=False, no_wrap=False):
     """Fix style of unversionned ``.po`` files, or or all f
     """
     if modified:
-        git_status = check_output(
-            ["git", "status", "--porcelain"], universal_newlines=True
-        )
+        git_status = check_output(["git", "status", "--porcelain"], encoding="utf-8")
         git_status_lines = [
             line.split(maxsplit=2) for line in git_status.split("\n") if line
         ]
@@ -30,7 +28,7 @@ def fix_style(po_files, modified=False, no_wrap=False):
         args = ["msgcat", "-", "-o", po_path]
         if no_wrap:
             args[1:1] = ["--no-wrap"]
-        run(args, universal_newlines=True, check=True, input=po_content)
+        run(args, encoding="utf-8", check=True, input=po_content)
 
 
 def main():
