@@ -9,7 +9,7 @@ from subprocess import check_output, run
 from tqdm import tqdm
 
 
-def fix_style(po_files, modified=False, no_wrap=False, ci=False):
+def fix_style(po_files, modified=False, no_wrap=False):
     """Fix style of unversionned ``.po`` files, or or all f
     """
     return_status = 0
@@ -30,8 +30,7 @@ def fix_style(po_files, modified=False, no_wrap=False, ci=False):
         if no_wrap:
             args[1:1] = ["--no-wrap"]
         run(args, encoding="utf-8", check=True, input=po_content)
-        if ci:
-            return_status = 1
+        return_status = 1
     return return_status
 
 
@@ -50,14 +49,9 @@ def main():
         action="store_true",
         help="see `man msgcat`, usefull to sed right after.",
     )
-    parser.add_argument(
-        "--ci",
-        action="store_false",
-        help="If set to true, will return 1 if a file has been modified",
-    )
     parser.add_argument("po_files", nargs="*", help="po files.")
     args = parser.parse_args()
     if not args.po_files and not args.modified:
         parser.print_help()
         exit(1)
-    exit(fix_style(args.po_files, args.modified, args.no_wrap, args.ci))
+    exit(fix_style(args.po_files, args.modified, args.no_wrap))
