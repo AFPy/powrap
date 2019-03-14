@@ -3,6 +3,7 @@
 """Fix style of uncommited po files, or all if --all is given.
 """
 
+from powrap import __version__
 from shlex import quote
 from subprocess import check_output, run
 
@@ -49,6 +50,9 @@ def main():
     )
     parser.add_argument(
         "--quiet", "-q", action="store_true", help="Do not show progress bar."
+    )
+    parser.add_argument(
+        "--version", action="version", version="%(prog)s " + __version__
     )
     parser.add_argument(
         "--no-wrap",
