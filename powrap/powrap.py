@@ -3,28 +3,38 @@
 """Fix style of uncommited po files, or all if --all is given.
 """
 
-from powrap import __version__
 from shlex import quote
 from subprocess import check_output, run
+from tempfile import NamedTemporaryFile
 
 from tqdm import tqdm
 
+from powrap import __version__
 
-def fix_style(po_files, modified=False, no_wrap=False, quiet=False):
-    """Fix style of unversionned ``.po`` files, or or all f
+
+def check_style(po_files, no_wrap=False, quiet=False):
+    """Check style of given po_files
     """
-    return_status = 0
-    if modified:
-        git_status = check_output(["git", "status", "--porcelain"], encoding="utf-8")
-        git_status_lines = [
-            line.split(maxsplit=2) for line in git_status.split("\n") if line
-        ]
-        po_files.extend(
-            filename
-            for status, filename in git_status_lines
-            if filename.endswith(".po")
-        )
-    for po_path in tqdm(po_files, desc="Fixing indentation in po files", disable=quiet):
+    to_fix = []
+    for po_path in tqdm(po_files, desc="Checking wrapping of po files", disable=quiet):
+        with open(po_path, encoding="UTF-8") as po_file:
+            po_content = po_file.read()
+        with NamedTemporaryFile("w+") as tmpfile:
+            args = ["msgcat", "-", "-o", tmpfile.name]
+            if no_wrap:
+                args[1:1] = ["--no-wrap"]
+            run(args, encoding="utf-8", check=True, input=po_content)
+            new_po_content = tmpfile.read()
+            if po_content != new_po_content:
+                to_fix.append(po_path)
+    return to_fix
+
+
+def fix_style(po_files, no_wrap=False, quiet=False):
+    """Fix style of given po_files
+    """
+    fixed = []
+    for po_path in tqdm(po_files, desc="Fixing wrapping of po files", disable=quiet):
         with open(po_path, encoding="UTF-8") as po_file:
             po_content = po_file.read()
         args = ["msgcat", "-", "-o", po_path]
@@ -34,8 +44,8 @@ def fix_style(po_files, modified=False, no_wrap=False, quiet=False):
         with open(po_path, encoding="UTF-8") as po_file:
             new_po_content = po_file.read()
         if po_content != new_po_content:
-            return_status = 1
-    return return_status
+            fixed.append(po_path)
+    return fixed
 
 
 def main():
@@ -52,6 +62,14 @@ def main():
         "--quiet", "-q", action="store_true", help="Do not show progress bar."
     )
     parser.add_argument(
+        "--check",
+        action="store_true",
+        help="Don't write the files back, just return the status. "
+        "Return code 0 means nothing would change.  "
+        "Return code 1 means some files would be reformatted.",
+    )
+
+    parser.add_argument(
         "--version", action="version", version="%(prog)s " + __version__
     )
     parser.add_argument(
@@ -64,4 +82,22 @@ def main():
     if not args.po_files and not args.modified:
         parser.print_help()
         exit(1)
-    exit(fix_style(args.po_files, args.modified, args.no_wrap, args.quiet))
+    if args.modified:
+        git_status = check_output(["git", "status", "--porcelain"], encoding="utf-8")
+        git_status_lines = [
+            line.split(maxsplit=2) for line in git_status.split("\n") if line
+        ]
+        args.po_files.extend(
+            filename
+            for status, filename in git_status_lines
+            if filename.endswith(".po")
+        )
+    if args.check:
+        to_fix = check_style(args.po_files, args.no_wrap, args.quiet)
+        if to_fix:
+            print("Would rewrap:", *to_fix, sep="\n- ")
+        code = 1 if to_fix else 0
+    else:
+        fixed = fix_style(args.po_files, args.no_wrap, args.quiet)
+        code = 1 if fixed else 0
+    exit(code)
