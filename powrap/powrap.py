@@ -9,7 +9,7 @@ from subprocess import check_output, run
 from tqdm import tqdm
 
 
-def fix_style(po_files, modified=False, no_wrap=False):
+def fix_style(po_files, modified=False, no_wrap=False, quiet=False):
     """Fix style of unversionned ``.po`` files, or or all f
     """
     return_status = 0
@@ -23,7 +23,7 @@ def fix_style(po_files, modified=False, no_wrap=False):
             for status, filename in git_status_lines
             if filename.endswith(".po")
         )
-    for po_path in tqdm(po_files, desc="Fixing indentation in po files"):
+    for po_path in tqdm(po_files, desc="Fixing indentation in po files", disable=quiet):
         with open(po_path, encoding="UTF-8") as po_file:
             po_content = po_file.read()
         args = ["msgcat", "-", "-o", po_path]
@@ -48,6 +48,9 @@ def main():
         "--modified", "-m", action="store_true", help="Use git to find modified files."
     )
     parser.add_argument(
+        "--quiet", "-q", action="store_true", help="Do not show progress bar."
+    )
+    parser.add_argument(
         "--no-wrap",
         action="store_true",
         help="see `man msgcat`, usefull to sed right after.",
@@ -57,4 +60,4 @@ def main():
     if not args.po_files and not args.modified:
         parser.print_help()
         exit(1)
-    exit(fix_style(args.po_files, args.modified, args.no_wrap))
+    exit(fix_style(args.po_files, args.modified, args.no_wrap, args.quiet))
