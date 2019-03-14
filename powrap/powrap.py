@@ -30,7 +30,10 @@ def fix_style(po_files, modified=False, no_wrap=False):
         if no_wrap:
             args[1:1] = ["--no-wrap"]
         run(args, encoding="utf-8", check=True, input=po_content)
-        return_status = 1
+        with open(po_path, encoding="UTF-8") as po_file:
+            new_po_content = po_file.read()
+        if po_content != new_po_content:
+            return_status = 1
     return return_status
 
 
