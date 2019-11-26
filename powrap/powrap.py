@@ -33,7 +33,7 @@ def check_style(po_files, no_wrap=False, quiet=False):
 
 
 def fix_style(po_files, no_wrap=False, quiet=False):
-    """Fix style of given po_files
+    """Fix style of given po_files.
     """
     fixed = []
     for po_path in tqdm(po_files, desc="Fixing wrapping of po files", disable=quiet):
