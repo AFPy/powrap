@@ -12,6 +12,7 @@ setup(
     author_email="julien@palard.fr",
     url="https://github.com/JulienPalard/powrap",
     packages=["powrap"],
+    python_requires=">= 3.6",
     package_dir={"powrap": "powrap"},
     entry_points={"console_scripts": ["powrap=powrap.powrap:main"]},
     include_package_data=True,
