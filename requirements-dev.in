@@ -1,0 +1,5 @@
+setuptools
+wheel
+twine
+black
+pip-tools
