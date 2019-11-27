@@ -70,7 +70,6 @@ int wrap_strings = 1;
 char *
 wrap (const char *name, const char *value, const char *line_prefix)
 {
-    int extra_indent = 0;
     int do_wrap = 1;
     size_t page_width = 79;
     const char *charset = "UTF-8";
@@ -233,21 +232,17 @@ wrap (const char *name, const char *value, const char *line_prefix)
                used.  INDENT-F.  */
             {
                 int currcol = 0;
-                char *spacebuffer;
-                spacebuffer = malloc(extra_indent + 1);
-                if (line_prefix != NULL)
-                    {
-                        buffer_append(out, line_prefix);
-                        currcol = strlen (line_prefix);
-                    }
-                if (first_line)
-                    {
-                        buffer_append(out,name);
-                        currcol += strlen (name);
-                        buffer_append(out," ");
-                        currcol++;
-                        first_line = 0;
-                    }
+                if (line_prefix != NULL) {
+                    buffer_append(out, line_prefix);
+                    currcol = strlen (line_prefix);
+                }
+                if (first_line) {
+                    buffer_append(out,name);
+                    currcol += strlen (name);
+                    buffer_append(out," ");
+                    currcol++;
+                    first_line = 0;
+                }
             }
 
             /* Print the portion itself, with linebreaks where necessary.  */
