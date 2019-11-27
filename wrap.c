@@ -64,55 +64,6 @@ void buffer_append_char(buffer *buffer, char str) {
     buffer->mem[buffer->pos] = '\0';
 }
 
-void buffer_del(buffer *buffer) {
-    free(buffer->mem);
-    free(buffer);
-}
-
-/* Test for a weird encoding, i.e. an encoding which has double-byte
-   characters ending in 0x5C.  */
-int po_is_charset_weird (const char *canon_charset)
-{
-    static const char *weird_charsets[] =
-        {
-         "BIG5",
-         "BIG5-HKSCS",
-         "GBK",
-         "GB18030",
-         "SHIFT_JIS",
-         "JOHAB"
-        };
-    size_t i;
-
-    for (i = 0; i < SIZEOF (weird_charsets); i++)
-        if (strcmp (canon_charset, weird_charsets[i]) == 0)
-            return 1;
-    return 0;
-}
-
-/* Test for a weird CJK encoding, i.e. a weird encoding with CJK structure.
-   An encoding has CJK structure if every valid character stream is composed
-   of single bytes in the range 0x{00..7F} and of byte pairs in the range
-   0x{80..FF}{30..FF}.  */
-int po_is_charset_weird_cjk (const char *canon_charset)
-{
-    static const char *weird_cjk_charsets[] =
-        {                     /* single bytes   double bytes       */
-         "BIG5",             /* 0x{00..7F},    0x{A1..F9}{40..FE} */
-         "BIG5-HKSCS",       /* 0x{00..7F},    0x{88..FE}{40..FE} */
-         "GBK",              /* 0x{00..7F},    0x{81..FE}{40..FE} */
-         "GB18030",          /* 0x{00..7F},    0x{81..FE}{30..FE} */
-         "SHIFT_JIS",        /* 0x{00..7F},    0x{81..F9}{40..FC} */
-         "JOHAB"             /* 0x{00..7F},    0x{84..F9}{31..FE} */
-        };
-    size_t i;
-
-    for (i = 0; i < SIZEOF (weird_cjk_charsets); i++)
-        if (strcmp (canon_charset, weird_cjk_charsets[i]) == 0)
-            return 1;
-    return 0;
-}
-
 int escape = 0;
 int indent = 0;
 int wrap_strings = 1;
@@ -128,13 +79,10 @@ wrap (const char *name, const char *value, const char *line_prefix)
     const char *canon_charset;
     const char *s;
     int first_line;
-    int weird_cjk;
     buffer *out;
     char *output_string;
 
     out = buffer_new(1024);
-
-    weird_cjk = po_is_charset_weird_cjk (charset);
 
     /* Loop over the '\n' delimited portions of value.  */
     s = value;
@@ -174,21 +122,7 @@ wrap (const char *name, const char *value, const char *line_prefix)
                     else if (c == '\\' || c == '"')
                         portion_len += 2;
                     else
-                        {
-                            {
-                                if (weird_cjk
-                                    /* Special handling of encodings with CJK structure.  */
-                                    && ep + 2 <= es
-                                    && (unsigned char) ep[0] >= 0x80
-                                    && (unsigned char) ep[1] >= 0x30)
-                                    {
-                                        portion_len += 2;
-                                        ep += 1;
-                                    }
-                                else
-                                    portion_len += 1;
-                            }
-                        }
+                        portion_len += 1;
                 }
             portion = calloc (portion_len, sizeof(*portion));
             overrides = calloc (portion_len, sizeof(*overrides));
@@ -252,28 +186,9 @@ wrap (const char *name, const char *value, const char *line_prefix)
                         }
                     else
                         {
-                            {
-                                if (weird_cjk
-                                    /* Special handling of encodings with CJK structure.  */
-                                    && ep + 2 <= es
-                                    && (unsigned char) c >= 0x80
-                                    && (unsigned char) ep[1] >= 0x30)
-                                    {
-                                        *pp++ = c;
-                                        ep += 1;
-                                        *pp++ = *ep;
-                                        *op++ = brk;
-                                        *op++ = UC_BREAK_PROHIBITED;
-                                        *ap++ = attr;
-                                        *ap++ = attr;
-                                    }
-                                else
-                                    {
-                                        *pp++ = c;
-                                        *op++ = brk;
-                                        *ap++ = attr;
-                                    }
-                            }
+                            *pp++ = c;
+                            *op++ = brk;
+                            *ap++ = attr;
                         }
                 }
 
