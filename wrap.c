@@ -760,6 +760,7 @@ wrap (const char *name, const char *value)
     if (conv != (iconv_t)(-1))
         iconv_close (conv);
 #endif
+    output_string = out->mem;
     free(out);
     return output_string;
 }
