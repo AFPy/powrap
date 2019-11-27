@@ -19,60 +19,6 @@
 #include <unilbrk.h>
 
 
-void
-xalloc_die ()
-{
-    exit (EXIT_FAILURE);
-}
-
-static void *
-fixup_null_alloc (size_t n)
-{
-    void *p;
-
-    p = NULL;
-    if (n == 0)
-        p = malloc ((size_t) 1);
-    if (p == NULL)
-        xalloc_die ();
-    return p;
-}
-
-
-void *
-xmalloc (size_t n)
-{
-    void *p;
-
-    p = malloc (n);
-    if (p == NULL)
-        p = fixup_null_alloc (n);
-    return p;
-}
-
-# define xalloc_oversized(n, s)                                         \
-    ((size_t) (sizeof (ptrdiff_t) <= sizeof (size_t) ? -1 : -2) / (s) < (n))
-
-void *
-xnmalloc (size_t nmemb, size_t size)
-{
-    size_t n;
-    void *p;
-
-    if (xalloc_oversized (nmemb, size))
-        xalloc_die ();
-    n = nmemb * size;
-    p = malloc (n);
-    if (p == NULL)
-        p = fixup_null_alloc (n);
-    return p;
-}
-
-/* Allocate memory for NMEMB elements of type T, with error checking.  */
-/* extern T *XNMALLOC (size_t nmemb, typename T); */
-# define XNMALLOC(N,T)                                                  \
-    ((T *) (sizeof (T) == 1 ? xmalloc (N) : xnmalloc (N, sizeof (T))))
-
 #define NFORMATS 28     /* Number of format_type enum values.  */
 
 #define NSYNTAXCHECKS 4
@@ -467,9 +413,9 @@ wrap (const char *line_prefix, int extra_indent,
                                 }
                         }
                 }
-            portion = XNMALLOC (portion_len, char);
-            overrides = XNMALLOC (portion_len, char);
-            attributes = XNMALLOC (portion_len, char);
+            portion = calloc (portion_len, sizeof(*portion));
+            overrides = calloc (portion_len, sizeof(*overrides));
+            attributes = calloc (portion_len, sizeof(*attributes));
             for (ep = s, pp = portion, op = overrides, ap = attributes; ep < es; ep++)
                 {
                     char c = *ep;
@@ -608,7 +554,7 @@ wrap (const char *line_prefix, int extra_indent,
             if (es > s && es[-1] == '\n')
                 overrides[portion_len - 2] = UC_BREAK_PROHIBITED;
 
-            linebreaks = XNMALLOC (portion_len, char);
+            linebreaks = calloc (portion_len, sizeof(*linebreaks));
 
             /* Subsequent lines after a break are all indented.
                See INDENT-S.  */
@@ -835,6 +781,6 @@ int main(int ac, char **av)
         printf("Usage: %s [msgid|msgstr] STRING\n", av[0]);
         exit(EXIT_FAILURE);
     }
-    wrap (NULL, 0, av[1], av[2], 1, 79, "ASCII");
+    wrap (NULL, 0, av[1], av[2], 1, 79, "UTF-8");
 
 }
