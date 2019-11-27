@@ -194,7 +194,7 @@ wrap (const char *name, const char *value, const char *line_prefix)
             startcol -= startcol_after_break;
 
             /* Do line breaking on the portion.  */
-            ulc_width_linebreaks (portion, portion_len, width, startcol, 0,
+            u8_width_linebreaks (portion, portion_len, width, startcol, 0,
                                   overrides, charset, linebreaks);
 
             /* If this is the first line, and we are not using the indented
