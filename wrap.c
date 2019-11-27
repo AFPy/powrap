@@ -18,33 +18,6 @@
 #include <uniconv.h>
 #include <unilbrk.h>
 
-#define NFORMATS 28     /* Number of format_type enum values.  */
-
-#define NSYNTAXCHECKS 4
-
-
-/* Is current msgid a format string?  */
-enum is_format
-    {
-     undecided,
-     yes,
-     no,
-     yes_according_to_context,
-     possible,
-     impossible
-    };
-
-int
-possible_format_p (enum is_format is_format)
-{
-    return is_format == possible
-        || is_format == yes_according_to_context
-        || is_format == yes;
-}
-
-int
-possible_format_p (enum is_format);
-
 enum
     {
      ATTR_ESCAPE_SEQUENCE          = 1 << 0,
@@ -53,19 +26,6 @@ enum
      ATTR_INVALID_FORMAT_DIRECTIVE = 1 << 2
     };
 
-
-static const char ascii[] = "ASCII";
-
-/* The canonicalized encoding name for ASCII.  */
-const char *po_charset_ascii = ascii;
-
-static const char utf8[] = "UTF-8";
-
-/* The canonicalized encoding name for UTF-8.  */
-const char *po_charset_utf8 = utf8;
-
-int
-c_strcasecmp (const char *s1, const char *s2);
 
 #define SIZEOF(a) (sizeof(a) / sizeof(a[0]))
 
