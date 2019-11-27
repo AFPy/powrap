@@ -602,6 +602,12 @@ wrap (const char *name, const char *value)
                     || startcol > width
                     || memchr (linebreaks, UC_BREAK_POSSIBLE, portion_len) != NULL))
                 {
+                    if (line_prefix != NULL)
+                        buffer_append(out, line_prefix);
+                    buffer_append(out, name);
+                    buffer_append(out, " ");
+                    buffer_append(out, "\"\"");
+                    buffer_append(out, "\n");
                     first_line = 0;
                     /* Recompute startcol and linebreaks.  */
                     goto recompute;
@@ -616,23 +622,28 @@ wrap (const char *name, const char *value)
                 spacebuffer = malloc(extra_indent + 1);
                 if (line_prefix != NULL)
                     {
+                        buffer_append(out, line_prefix);
                         currcol = strlen (line_prefix);
                     }
                 if (first_line)
                     {
+                        buffer_append(out,name);
                         currcol += strlen (name);
                         if (indent)
                             {
 
                                 if (extra_indent > 0) {
                                     snprintf(spacebuffer, extra_indent, "%*s", extra_indent, "");
+                                    buffer_append(out, spacebuffer);
                                 }
                                 currcol += extra_indent;
                                 snprintf(spacebuffer, extra_indent, "%*s", 8 - (currcol & 7), "");
+                                buffer_append(out, spacebuffer);
                                 currcol = (currcol + 8) & ~7;
                             }
                         else
                             {
+                                buffer_append(out," ");
                                 currcol++;
                             }
                         first_line = 0;
@@ -643,9 +654,11 @@ wrap (const char *name, const char *value)
                             {
                                 if (extra_indent > 0) {
                                     snprintf(spacebuffer, extra_indent, "%*s", extra_indent, "");
+                                    buffer_append(out, spacebuffer);
                                 }
                                 currcol += extra_indent;
                                 snprintf(spacebuffer, extra_indent, "%*s", 8 - (currcol & 7), "");
+                                buffer_append(out, spacebuffer);
                                 currcol = (currcol + 8) & ~7;
                             }
                     }
@@ -655,6 +668,7 @@ wrap (const char *name, const char *value)
             {
                 char currattr = 0;
 
+                buffer_append(out,"\"");
                 for (i = 0; i < portion_len; i++)
                     {
                         if (linebreaks[i] == UC_BREAK_POSSIBLE)
@@ -677,17 +691,21 @@ wrap (const char *name, const char *value)
                                 if (!(currattr == 0))
                                     abort ();
 
+                                buffer_append_char(out,'"');
                                 buffer_append_char(out,'\n');
                                 currcol = 0;
                                 /* INDENT-S.  */
                                 if (line_prefix != NULL)
                                     {
+                                        buffer_append(out,line_prefix);
                                         currcol = strlen (line_prefix);
                                     }
                                 if (indent)
                                     {
+                                        buffer_append(out, "        ");
                                         currcol = (currcol + 8) & ~7;
                                     }
+                                buffer_append(out,"\"");
                             }
                         /* Change currattr so that it matches attributes[i].  */
                         if (attributes[i] != currattr)
@@ -740,6 +758,7 @@ wrap (const char *name, const char *value)
                 if (!(currattr == 0))
                     abort ();
 
+                buffer_append_char(out,'"');
                 buffer_append_char(out,'\n');
             }
 
