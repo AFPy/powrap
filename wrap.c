@@ -23,17 +23,6 @@
 #define NSYNTAXCHECKS 4
 
 
-enum
-    {
-     /* Set on the first byte of a format directive.  */
-     FMTDIR_START  = 1 << 0,
-     /* Set on the last byte of a format directive.  */
-     FMTDIR_END    = 1 << 1,
-     /* Set on the last byte of an invalid format directive, where a parse error
-        was recognized.  */
-     FMTDIR_ERROR  = 1 << 2
-    };
-
 /* Is current msgid a format string?  */
 enum is_format
     {
@@ -164,68 +153,6 @@ int po_is_charset_weird_cjk (const char *canon_charset)
     return 0;
 }
 
-const char *po_charset_canonicalize (const char *charset)
-{
-    /* The list of charsets supported by glibc's iconv() and by the portable
-       iconv() across platforms.  Taken from intl/config.charset.  */
-    static const char *standard_charsets[] =
-        {
-         "ASCII", "ANSI_X3.4-1968", "US-ASCII",        /* i = 0..2 */
-         "ISO-8859-1", "ISO_8859-1",                 /* i = 3, 4 */
-         "ISO-8859-2", "ISO_8859-2",
-         "ISO-8859-3", "ISO_8859-3",
-         "ISO-8859-4", "ISO_8859-4",
-         "ISO-8859-5", "ISO_8859-5",
-         "ISO-8859-6", "ISO_8859-6",
-         "ISO-8859-7", "ISO_8859-7",
-         "ISO-8859-8", "ISO_8859-8",
-         "ISO-8859-9", "ISO_8859-9",
-         "ISO-8859-13", "ISO_8859-13",
-         "ISO-8859-14", "ISO_8859-14",
-         "ISO-8859-15", "ISO_8859-15",               /* i = 25, 26 */
-         "KOI8-R",
-         "KOI8-U",
-         "KOI8-T",
-         "CP850",
-         "CP866",
-         "CP874",
-         "CP932",
-         "CP949",
-         "CP950",
-         "CP1250",
-         "CP1251",
-         "CP1252",
-         "CP1253",
-         "CP1254",
-         "CP1255",
-         "CP1256",
-         "CP1257",
-         "GB2312",
-         "EUC-JP",
-         "EUC-KR",
-         "EUC-TW",
-         "BIG5",
-         "BIG5-HKSCS",
-         "GBK",
-         "GB18030",
-         "SHIFT_JIS",
-         "JOHAB",
-         "TIS-620",
-         "VISCII",
-         "GEORGIAN-PS",
-         "UTF-8"
-        };
-    size_t i;
-
-    for (i = 0; i < SIZEOF (standard_charsets); i++)
-        if (strcasecmp (charset, standard_charsets[i]) == 0)
-            return standard_charsets[i < 3 ? 0 : i < 27 ? ((i - 3) & ~1) + 3 : i];
-    return NULL;
-}
-
-
-
-
 int escape = 0;
 int indent = 0;
 int wrap_strings = 1;
@@ -239,72 +166,16 @@ wrap (const char *name, const char *value, const char *line_prefix)
     size_t page_width = 79;
     const char *charset = "UTF-8";
     const char *canon_charset;
-    char *fmtdir;
     const char *s;
     int first_line;
-#if HAVE_ICONV
-    const char *envval;
-    iconv_t conv;
-#endif
     int weird_cjk;
     buffer *out;
     char *output_string;
 
     out = buffer_new(1024);
-    canon_charset = po_charset_canonicalize (charset);
 
-#if HAVE_ICONV
-    /* The old Solaris/openwin msgfmt and GNU msgfmt <= 0.10.35 don't know
-       about multibyte encodings, and require a spurious backslash after
-       every multibyte character whose last byte is 0x5C.  Some programs,
-       like vim, distribute PO files in this broken format.  It is important
-       for such programs that GNU msgmerge continues to support this old
-       PO file format when the Makefile requests it.  */
-    envval = getenv ("OLD_PO_FILE_OUTPUT");
-    if (envval != NULL && *envval != '\0')
-        /* Write a PO file in old format, with extraneous backslashes.  */
-        conv = (iconv_t)(-1);
-    else
-        if (canon_charset == NULL)
-            /* Invalid PO file encoding.  */
-            conv = (iconv_t)(-1);
-        else
-            /* Avoid glibc-2.1 bug with EUC-KR.  */
-# if ((__GLIBC__ == 2 && __GLIBC_MINOR__ <= 1) && !defined __UCLIBC__)  \
-    && !defined _LIBICONV_VERSION
-            if (strcmp (canon_charset, "EUC-KR") == 0)
-                conv = (iconv_t)(-1);
-            else
-# endif
-                /* Avoid Solaris 2.9 bug with GB2312, EUC-TW, BIG5, BIG5-HKSCS, GBK,
-                   GB18030.  */
-# if defined __sun && !defined _LIBICONV_VERSION
-                if (   strcmp (canon_charset, "GB2312") == 0
-                       || strcmp (canon_charset, "EUC-TW") == 0
-                       || strcmp (canon_charset, "BIG5") == 0
-                       || strcmp (canon_charset, "BIG5-HKSCS") == 0
-                       || strcmp (canon_charset, "GBK") == 0
-                       || strcmp (canon_charset, "GB18030") == 0)
-                    conv = (iconv_t)(-1);
-                else
-# endif
-                    /* Use iconv() to parse multibyte characters.  */
-                    conv = iconv_open ("UTF-8", canon_charset);
+    weird_cjk = po_is_charset_weird_cjk (charset);
 
-    if (conv != (iconv_t)(-1))
-        weird_cjk = 0;
-    else
-#endif
-        if (canon_charset == NULL)
-            weird_cjk = 0;
-        else
-            weird_cjk = po_is_charset_weird_cjk (canon_charset);
-
-    if (canon_charset == NULL)
-        canon_charset = po_charset_ascii;
-
-    /* Determine the extent of format string directives.  */
-    fmtdir = NULL;
     /* Loop over the '\n' delimited portions of value.  */
     s = value;
     first_line = 1;
@@ -344,70 +215,19 @@ wrap (const char *name, const char *value, const char *line_prefix)
                         portion_len += 2;
                     else
                         {
-#if HAVE_ICONV
-                            if (conv != (iconv_t)(-1))
-                                {
-                                    /* Skip over a complete multi-byte character.  Don't
-                                       interpret the second byte of a multi-byte character as
-                                       ASCII.  This is needed for the BIG5, BIG5-HKSCS, GBK,
-                                       GB18030, SHIFT_JIS, JOHAB encodings.  */
-                                    char scratchbuf[64];
-                                    const char *inptr = ep;
-                                    size_t insize;
-                                    char *outptr = &scratchbuf[0];
-                                    size_t outsize = sizeof (scratchbuf);
-                                    size_t res;
-
-                                    res = (size_t)(-1);
-                                    for (insize = 1; inptr + insize <= es; insize++)
-                                        {
-                                            res = iconv (conv,
-                                                         (ICONV_CONST char **) &inptr, &insize,
-                                                         &outptr, &outsize);
-                                            if (!(res == (size_t)(-1) && errno == EINVAL))
-                                                break;
-                                            /* We expect that no input bytes have been consumed
-                                               so far.  */
-                                            if (inptr != ep)
-                                                abort ();
-                                        }
-                                    if (res == (size_t)(-1))
-                                        {
-                                            if (errno == EILSEQ)
-                                                {
-                                                    printf("invalid multibyte sequence\n");
-                                                    continue;
-                                                }
-                                            else if (errno == EINVAL)
-                                                {
-                                                    /* This could happen if an incomplete
-                                                       multibyte sequence at the end of input
-                                                       bytes.  */
-                                                    printf("incomplete multibyte sequence\n");
-                                                    continue;
-                                                }
-                                            else
-                                                abort ();
-                                        }
-                                    insize = inptr - ep;
-                                    portion_len += insize;
-                                    ep += insize - 1;
-                                }
-                            else
-#endif
-                                {
-                                    if (weird_cjk
-                                        /* Special handling of encodings with CJK structure.  */
-                                        && ep + 2 <= es
-                                        && (unsigned char) ep[0] >= 0x80
-                                        && (unsigned char) ep[1] >= 0x30)
-                                        {
-                                            portion_len += 2;
-                                            ep += 1;
-                                        }
-                                    else
-                                        portion_len += 1;
-                                }
+                            {
+                                if (weird_cjk
+                                    /* Special handling of encodings with CJK structure.  */
+                                    && ep + 2 <= es
+                                    && (unsigned char) ep[0] >= 0x80
+                                    && (unsigned char) ep[1] >= 0x30)
+                                    {
+                                        portion_len += 2;
+                                        ep += 1;
+                                    }
+                                else
+                                    portion_len += 1;
+                            }
                         }
                 }
             portion = calloc (portion_len, sizeof(*portion));
@@ -419,9 +239,9 @@ wrap (const char *name, const char *value, const char *line_prefix)
                     char attr = 0;
                     char brk = UC_BREAK_UNDEFINED;
                     /* Don't break inside format directives.  */
-                    if (attr == ATTR_FORMAT_DIRECTIVE
-                        && (fmtdir[ep - value] & FMTDIR_START) == 0)
-                        brk = UC_BREAK_PROHIBITED;
+                    /* if (attr == ATTR_FORMAT_DIRECTIVE */
+                    /*     && (fmtdir[ep - value] & FMTDIR_START) == 0) */
+                    /*     brk = UC_BREAK_PROHIBITED; */
                     if (is_escape (c))
                         {
                             switch (c)
@@ -472,78 +292,28 @@ wrap (const char *name, const char *value, const char *line_prefix)
                         }
                     else
                         {
-#if HAVE_ICONV
-                            if (conv != (iconv_t)(-1))
-                                {
-                                    /* Copy a complete multi-byte character.  Don't
-                                       interpret the second byte of a multi-byte character as
-                                       ASCII.  This is needed for the BIG5, BIG5-HKSCS, GBK,
-                                       GB18030, SHIFT_JIS, JOHAB encodings.  */
-                                    char scratchbuf[64];
-                                    const char *inptr = ep;
-                                    size_t insize;
-                                    char *outptr = &scratchbuf[0];
-                                    size_t outsize = sizeof (scratchbuf);
-                                    size_t res;
-
-                                    res = (size_t)(-1);
-                                    for (insize = 1; inptr + insize <= es; insize++)
-                                        {
-                                            res = iconv (conv,
-                                                         (ICONV_CONST char **) &inptr, &insize,
-                                                         &outptr, &outsize);
-                                            if (!(res == (size_t)(-1) && errno == EINVAL))
-                                                break;
-
-                                            /* We expect that no input bytes have been consumed
-                                               so far.  */
-                                            if (inptr != ep)
-                                                abort ();
-                                        }
-                                    if (res == (size_t)(-1))
-                                        {
-                                            if (errno == EILSEQ)
-                                                {
-                                                    printf("invalid multibyte sequence\n");
-                                                    continue;
-                                                }
-                                            else
-                                                abort ();
-                                        }
-                                    insize = inptr - ep;
-                                    memcpy (pp, ep, insize);
-                                    pp += insize;
-                                    *op = brk;
-                                    memset (op + 1, UC_BREAK_PROHIBITED, insize - 1);
-                                    op += insize;
-                                    memset (ap, attr, insize);
-                                    ap += insize;
-                                    ep += insize - 1;
-                                }
-                            else
-#endif
-                                {
-                                    if (weird_cjk
-                                        /* Special handling of encodings with CJK structure.  */
-                                        && ep + 2 <= es
-                                        && (unsigned char) c >= 0x80
-                                        && (unsigned char) ep[1] >= 0x30)
-                                        {
-                                            *pp++ = c;
-                                            ep += 1;
-                                            *pp++ = *ep;
-                                            *op++ = brk;
-                                            *op++ = UC_BREAK_PROHIBITED;
-                                            *ap++ = attr;
-                                            *ap++ = attr;
-                                        }
-                                    else
-                                        {
-                                            *pp++ = c;
-                                            *op++ = brk;
-                                            *ap++ = attr;
-                                        }
-                                }
+                            {
+                                if (weird_cjk
+                                    /* Special handling of encodings with CJK structure.  */
+                                    && ep + 2 <= es
+                                    && (unsigned char) c >= 0x80
+                                    && (unsigned char) ep[1] >= 0x30)
+                                    {
+                                        *pp++ = c;
+                                        ep += 1;
+                                        *pp++ = *ep;
+                                        *op++ = brk;
+                                        *op++ = UC_BREAK_PROHIBITED;
+                                        *ap++ = attr;
+                                        *ap++ = attr;
+                                    }
+                                else
+                                    {
+                                        *pp++ = c;
+                                        *op++ = brk;
+                                        *ap++ = attr;
+                                    }
+                            }
                         }
                 }
 
@@ -590,7 +360,7 @@ wrap (const char *name, const char *value, const char *line_prefix)
 
             /* Do line breaking on the portion.  */
             ulc_width_linebreaks (portion, portion_len, width, startcol, 0,
-                                  overrides, canon_charset, linebreaks);
+                                  overrides, charset, linebreaks);
 
             /* If this is the first line, and we are not using the indented
                style, and the line would wrap, then use an empty first line
@@ -771,13 +541,6 @@ wrap (const char *name, const char *value, const char *line_prefix)
         }
     while (*s);
 
-    if (fmtdir != NULL)
-        free (fmtdir);
-
-#if HAVE_ICONV
-    if (conv != (iconv_t)(-1))
-        iconv_close (conv);
-#endif
     output_string = out->mem;
     free(out);
     return output_string;
