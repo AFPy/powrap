@@ -69,7 +69,6 @@ wrap (const char *name, const char *value, const char *line_prefix)
 {
     size_t page_width = 79;
     const char *charset = "UTF-8";
-    const char *canon_charset;
     const char *s;
     int first_line;
     buffer *out;
@@ -121,12 +120,7 @@ wrap (const char *name, const char *value, const char *line_prefix)
             for (ep = s, pp = portion, op = overrides, ap = attributes; ep < es; ep++)
                 {
                     char c = *ep;
-                    char attr = 0;
                     char brk = UC_BREAK_UNDEFINED;
-                    /* Don't break inside format directives.  */
-                    /* if (attr == ATTR_FORMAT_DIRECTIVE */
-                    /*     && (fmtdir[ep - value] & FMTDIR_START) == 0) */
-                    /*     brk = UC_BREAK_PROHIBITED; */
                     if (is_escape (c))
                         {
                             switch (c)
@@ -144,8 +138,8 @@ wrap (const char *name, const char *value, const char *line_prefix)
                             *pp++ = c;
                             *op++ = brk;
                             *op++ = UC_BREAK_PROHIBITED;
-                            *ap++ = attr | ATTR_ESCAPE_SEQUENCE;
-                            *ap++ = attr | ATTR_ESCAPE_SEQUENCE;
+                            *ap++ = ATTR_ESCAPE_SEQUENCE;
+                            *ap++ = ATTR_ESCAPE_SEQUENCE;
                             /* We warn about any use of escape sequences beside
                                '\n' and '\t'.  */
                             if (c != 'n' && c != 't')
@@ -157,14 +151,14 @@ wrap (const char *name, const char *value, const char *line_prefix)
                             *pp++ = c;
                             *op++ = brk;
                             *op++ = UC_BREAK_PROHIBITED;
-                            *ap++ = attr | ATTR_ESCAPE_SEQUENCE;
-                            *ap++ = attr | ATTR_ESCAPE_SEQUENCE;
+                            *ap++ = ATTR_ESCAPE_SEQUENCE;
+                            *ap++ = ATTR_ESCAPE_SEQUENCE;
                         }
                     else
                         {
                             *pp++ = c;
                             *op++ = brk;
-                            *ap++ = attr;
+                            *ap++ = 0;
                         }
                 }
 
