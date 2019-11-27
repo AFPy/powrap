@@ -232,9 +232,8 @@ int wrap_strings = 1;
 
 
 char *
-wrap (const char *name, const char *value)
+wrap (const char *name, const char *value, const char *line_prefix)
 {
-    const char *line_prefix = NULL;
     int extra_indent = 0;
     int do_wrap = 1;
     size_t page_width = 79;
@@ -790,6 +789,6 @@ int main(int ac, char **av)
         printf("Usage: %s [msgid|msgstr] STRING\n", av[0]);
         exit(EXIT_FAILURE);
     }
-    printf("%s\n", wrap (av[1], av[2]));
+    printf("%s\n", wrap (av[1], av[2], NULL));
 
 }

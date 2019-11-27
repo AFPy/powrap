@@ -10,6 +10,7 @@ from subprocess import check_output, run
 from tempfile import NamedTemporaryFile
 
 from tqdm import tqdm
+import polib
 
 from powrap import __version__
 
@@ -40,9 +41,8 @@ def fix_style(po_files, no_wrap=False, quiet=False):
         with open(po_path, encoding="UTF-8") as po_file:
             po_content = po_file.read()
         args = ["msgcat", "-", "-o", po_path]
-        if no_wrap:
-            args[1:1] = ["--no-wrap"]
-        run(args, encoding="utf-8", check=True, input=po_content)
+        po_file = polib.pofile(po_path)
+        po_file.save()
         with open(po_path, encoding="UTF-8") as po_file:
             new_po_content = po_file.read()
         if po_content != new_po_content:
