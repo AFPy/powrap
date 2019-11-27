@@ -67,7 +67,6 @@ void buffer_append_char(buffer *buffer, char str) {
 char *
 wrap (const char *name, const char *value, const char *line_prefix)
 {
-    int do_wrap = 1;
     size_t page_width = 79;
     const char *charset = "UTF-8";
     const char *canon_charset;
@@ -181,7 +180,7 @@ wrap (const char *name, const char *value, const char *line_prefix)
             startcol_after_break++;
 
             /* The line width.  Allow room for the closing quote character.  */
-            width = (do_wrap ? page_width : INT_MAX) - 1;
+            width = page_width - 1;
             /* Adjust for indentation of subsequent lines.  */
             width -= startcol_after_break;
 
