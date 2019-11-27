@@ -65,7 +65,6 @@ void buffer_append_char(buffer *buffer, char str) {
 }
 
 int escape = 0;
-int indent = 0;
 int wrap_strings = 1;
 
 
@@ -201,8 +200,6 @@ wrap (const char *name, const char *value, const char *line_prefix)
             /* Subsequent lines after a break are all indented.
                See INDENT-S.  */
             startcol_after_break = (line_prefix ? strlen (line_prefix) : 0);
-            if (indent)
-                startcol_after_break = (startcol_after_break + extra_indent + 8) & ~7;
             startcol_after_break++;
 
             /* The line width.  Allow room for the closing quote character.  */
@@ -218,15 +215,7 @@ wrap (const char *name, const char *value, const char *line_prefix)
             if (first_line)
                 {
                     startcol += strlen (name);
-                    if (indent)
-                        startcol = (startcol + extra_indent + 8) & ~7;
-                    else
-                        startcol++;
-                }
-            else
-                {
-                    if (indent)
-                        startcol = (startcol + extra_indent + 8) & ~7;
+                    startcol++;
                 }
             /* Allow room for the opening quote character.  */
             startcol++;
@@ -240,7 +229,7 @@ wrap (const char *name, const char *value, const char *line_prefix)
             /* If this is the first line, and we are not using the indented
                style, and the line would wrap, then use an empty first line
                and restart.  */
-            if (first_line && !indent
+            if (first_line
                 && portion_len > 0
                 && (*es != '\0'
                     || startcol > width
@@ -273,38 +262,9 @@ wrap (const char *name, const char *value, const char *line_prefix)
                     {
                         buffer_append(out,name);
                         currcol += strlen (name);
-                        if (indent)
-                            {
-
-                                if (extra_indent > 0) {
-                                    snprintf(spacebuffer, extra_indent, "%*s", extra_indent, "");
-                                    buffer_append(out, spacebuffer);
-                                }
-                                currcol += extra_indent;
-                                snprintf(spacebuffer, extra_indent, "%*s", 8 - (currcol & 7), "");
-                                buffer_append(out, spacebuffer);
-                                currcol = (currcol + 8) & ~7;
-                            }
-                        else
-                            {
-                                buffer_append(out," ");
-                                currcol++;
-                            }
+                        buffer_append(out," ");
+                        currcol++;
                         first_line = 0;
-                    }
-                else
-                    {
-                        if (indent)
-                            {
-                                if (extra_indent > 0) {
-                                    snprintf(spacebuffer, extra_indent, "%*s", extra_indent, "");
-                                    buffer_append(out, spacebuffer);
-                                }
-                                currcol += extra_indent;
-                                snprintf(spacebuffer, extra_indent, "%*s", 8 - (currcol & 7), "");
-                                buffer_append(out, spacebuffer);
-                                currcol = (currcol + 8) & ~7;
-                            }
                     }
             }
 
@@ -343,11 +303,6 @@ wrap (const char *name, const char *value, const char *line_prefix)
                                     {
                                         buffer_append(out,line_prefix);
                                         currcol = strlen (line_prefix);
-                                    }
-                                if (indent)
-                                    {
-                                        buffer_append(out, "        ");
-                                        currcol = (currcol + 8) & ~7;
                                     }
                                 buffer_append(out,"\"");
                             }
