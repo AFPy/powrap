@@ -233,11 +233,14 @@ int wrap_strings = 1;
 
 
 char *
-wrap (const char *line_prefix, int extra_indent,
-      const char *name, const char *value,
-      int do_wrap, size_t page_width,
-      const char *charset)
+wrap (const char *value)
 {
+    const char *line_prefix = NULL;
+    int extra_indent = 0;
+    int do_wrap = 1;
+    size_t page_width = 79;
+    const char *charset = "UTF-8";
+    const char *name = "msgid";
     const char *canon_charset;
     char *fmtdir;
     const char *s;
@@ -771,6 +774,6 @@ int main(int ac, char **av)
         printf("Usage: %s [msgid|msgstr] STRING\n", av[0]);
         exit(EXIT_FAILURE);
     }
-    printf("%s\n", wrap (NULL, 0, av[1], av[2], 1, 79, "UTF-8"));
+    printf("%s\n", wrap (av[2]));
 
 }
