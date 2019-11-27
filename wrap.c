@@ -64,9 +64,6 @@ void buffer_append_char(buffer *buffer, char str) {
     buffer->mem[buffer->pos] = '\0';
 }
 
-int wrap_strings = 1;
-
-
 char *
 wrap (const char *name, const char *value, const char *line_prefix)
 {
@@ -184,7 +181,7 @@ wrap (const char *name, const char *value, const char *line_prefix)
             startcol_after_break++;
 
             /* The line width.  Allow room for the closing quote character.  */
-            width = (wrap_strings && do_wrap ? page_width : INT_MAX) - 1;
+            width = (do_wrap ? page_width : INT_MAX) - 1;
             /* Adjust for indentation of subsequent lines.  */
             width -= startcol_after_break;
 
