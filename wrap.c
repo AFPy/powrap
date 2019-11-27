@@ -106,14 +106,13 @@ void buffer_append(buffer *buffer, const char *str) {
 }
 
 void buffer_append_char(buffer *buffer, char str) {
-    int length = 1;
-
-    while (length + buffer->pos >= buffer->size) {
+    if (buffer->pos + 1 >= buffer->size) {
         buffer->size *= 2;
         buffer->mem = realloc(buffer->mem, buffer->size);
     }
     buffer->mem[buffer->pos] = str;
-    buffer->pos += length;
+    buffer->pos += 1;
+    buffer->mem[buffer->pos] = '\0';
 }
 
 void buffer_del(buffer *buffer) {
@@ -233,14 +232,13 @@ int wrap_strings = 1;
 
 
 char *
-wrap (const char *value)
+wrap (const char *name, const char *value)
 {
     const char *line_prefix = NULL;
     int extra_indent = 0;
     int do_wrap = 1;
     size_t page_width = 79;
     const char *charset = "UTF-8";
-    const char *name = "msgid";
     const char *canon_charset;
     char *fmtdir;
     const char *s;
@@ -254,8 +252,6 @@ wrap (const char *value)
     char *output_string;
 
     out = buffer_new(1024);
-    output_string = out->mem;
-
     canon_charset = po_charset_canonicalize (charset);
 
 #if HAVE_ICONV
@@ -681,7 +677,7 @@ wrap (const char *value)
                                 if (!(currattr == 0))
                                     abort ();
 
-                                buffer_append(out,"\n");
+                                buffer_append_char(out,'\n');
                                 currcol = 0;
                                 /* INDENT-S.  */
                                 if (line_prefix != NULL)
@@ -744,7 +740,7 @@ wrap (const char *value)
                 if (!(currattr == 0))
                     abort ();
 
-                buffer_append(out,"\n");
+                buffer_append_char(out,'\n');
             }
 
             free (linebreaks);
@@ -774,6 +770,6 @@ int main(int ac, char **av)
         printf("Usage: %s [msgid|msgstr] STRING\n", av[0]);
         exit(EXIT_FAILURE);
     }
-    printf("%s\n", wrap (av[2]));
+    printf("%s\n", wrap (av[1], av[2]));
 
 }
