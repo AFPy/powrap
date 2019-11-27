@@ -64,7 +64,6 @@ void buffer_append_char(buffer *buffer, char str) {
     buffer->mem[buffer->pos] = '\0';
 }
 
-int escape = 0;
 int wrap_strings = 1;
 
 
@@ -116,8 +115,6 @@ wrap (const char *name, const char *value, const char *line_prefix)
                     char c = *ep;
                     if (is_escape (c))
                         portion_len += 2;
-                    else if (escape && !isprint ((unsigned char) c))
-                        portion_len += 4;
                     else if (c == '\\' || c == '"')
                         portion_len += 2;
                     else
@@ -158,21 +155,6 @@ wrap (const char *name, const char *value, const char *line_prefix)
                                '\n' and '\t'.  */
                             if (c != 'n' && c != 't')
                                 printf("internationalized messages should not contain the '\\%c' escape sequence\n", c);
-                        }
-                    else if (escape && !isprint ((unsigned char) c))
-                        {
-                            *pp++ = '\\';
-                            *pp++ = '0' + (((unsigned char) c >> 6) & 7);
-                            *pp++ = '0' + (((unsigned char) c >> 3) & 7);
-                            *pp++ = '0' + ((unsigned char) c & 7);
-                            *op++ = brk;
-                            *op++ = UC_BREAK_PROHIBITED;
-                            *op++ = UC_BREAK_PROHIBITED;
-                            *op++ = UC_BREAK_PROHIBITED;
-                            *ap++ = attr | ATTR_ESCAPE_SEQUENCE;
-                            *ap++ = attr | ATTR_ESCAPE_SEQUENCE;
-                            *ap++ = attr | ATTR_ESCAPE_SEQUENCE;
-                            *ap++ = attr | ATTR_ESCAPE_SEQUENCE;
                         }
                     else if (c == '\\' || c == '"')
                         {
