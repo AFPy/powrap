@@ -80,6 +80,47 @@ c_strcasecmp (const char *s1, const char *s2);
 
 #define SIZEOF(a) (sizeof(a) / sizeof(a[0]))
 
+typedef struct s_buffer {
+    size_t pos;
+    size_t size;
+    char *mem;
+} buffer;
+
+buffer *buffer_new(int len) {
+    buffer *b = malloc(sizeof(buffer));
+    b->mem = calloc(len, sizeof(*b->mem));
+    b->pos = 0;
+    b->size = len;
+    return b;
+}
+
+void buffer_append(buffer *buffer, const char *str) {
+    int length = strlen(str);
+
+    while (length + buffer->pos >= buffer->size) {
+        buffer->size *= 2;
+        buffer->mem = realloc(buffer->mem, buffer->size);
+    }
+    memcpy(buffer->mem + buffer->pos, str, length);
+    buffer->pos += length;
+}
+
+void buffer_append_char(buffer *buffer, char str) {
+    int length = 1;
+
+    while (length + buffer->pos >= buffer->size) {
+        buffer->size *= 2;
+        buffer->mem = realloc(buffer->mem, buffer->size);
+    }
+    buffer->mem[buffer->pos] = str;
+    buffer->pos += length;
+}
+
+void buffer_del(buffer *buffer) {
+    free(buffer->mem);
+    free(buffer);
+}
+
 /* Test for a weird encoding, i.e. an encoding which has double-byte
    characters ending in 0x5C.  */
 int po_is_charset_weird (const char *canon_charset)
@@ -191,7 +232,7 @@ int indent = 0;
 int wrap_strings = 1;
 
 
-static void
+char *
 wrap (const char *line_prefix, int extra_indent,
       const char *name, const char *value,
       int do_wrap, size_t page_width,
@@ -206,6 +247,11 @@ wrap (const char *line_prefix, int extra_indent,
     iconv_t conv;
 #endif
     int weird_cjk;
+    buffer *out;
+    char *output_string;
+
+    out = buffer_new(1024);
+    output_string = out->mem;
 
     canon_charset = po_charset_canonicalize (charset);
 
@@ -558,11 +604,11 @@ wrap (const char *line_prefix, int extra_indent,
                     || memchr (linebreaks, UC_BREAK_POSSIBLE, portion_len) != NULL))
                 {
                     if (line_prefix != NULL)
-                        printf("%s", line_prefix);
-                    printf("%s", name);
-                    printf("%s", " ");
-                    printf("%s", "\"\"");
-                    printf("%s", "\n");
+                        buffer_append(out, line_prefix);
+                    buffer_append(out, name);
+                    buffer_append(out, " ");
+                    buffer_append(out, "\"\"");
+                    buffer_append(out, "\n");
                     first_line = 0;
                     /* Recompute startcol and linebreaks.  */
                     goto recompute;
@@ -573,27 +619,32 @@ wrap (const char *line_prefix, int extra_indent,
                used.  INDENT-F.  */
             {
                 int currcol = 0;
-
+                char *spacebuffer;
+                spacebuffer = malloc(extra_indent + 1);
                 if (line_prefix != NULL)
                     {
-                        printf("%s",line_prefix);
+                        buffer_append(out, line_prefix);
                         currcol = strlen (line_prefix);
                     }
                 if (first_line)
                     {
-                        printf("%s",name);
+                        buffer_append(out,name);
                         currcol += strlen (name);
                         if (indent)
                             {
-                                if (extra_indent > 0)
-                                    printf("%*s", extra_indent, "");
+
+                                if (extra_indent > 0) {
+                                    snprintf(spacebuffer, extra_indent, "%*s", extra_indent, "");
+                                    buffer_append(out, spacebuffer);
+                                }
                                 currcol += extra_indent;
-                                printf("%*s", 8 - (currcol & 7), "");
+                                snprintf(spacebuffer, extra_indent, "%*s", 8 - (currcol & 7), "");
+                                buffer_append(out, spacebuffer);
                                 currcol = (currcol + 8) & ~7;
                             }
                         else
                             {
-                                printf("%s"," ");
+                                buffer_append(out," ");
                                 currcol++;
                             }
                         first_line = 0;
@@ -602,10 +653,13 @@ wrap (const char *line_prefix, int extra_indent,
                     {
                         if (indent)
                             {
-                                if (extra_indent > 0)
-                                    printf("%*s", extra_indent, "");
+                                if (extra_indent > 0) {
+                                    snprintf(spacebuffer, extra_indent, "%*s", extra_indent, "");
+                                    buffer_append(out, spacebuffer);
+                                }
                                 currcol += extra_indent;
-                                printf("%*s", 8 - (currcol & 7), "");
+                                snprintf(spacebuffer, extra_indent, "%*s", 8 - (currcol & 7), "");
+                                buffer_append(out, spacebuffer);
                                 currcol = (currcol + 8) & ~7;
                             }
                     }
@@ -615,7 +669,7 @@ wrap (const char *line_prefix, int extra_indent,
             {
                 char currattr = 0;
 
-                printf("%s","\"");
+                buffer_append(out,"\"");
                 for (i = 0; i < portion_len; i++)
                     {
                         if (linebreaks[i] == UC_BREAK_POSSIBLE)
@@ -638,21 +692,21 @@ wrap (const char *line_prefix, int extra_indent,
                                 if (!(currattr == 0))
                                     abort ();
 
-                                printf("%s","\"");
-                                printf("%s","\n");
+                                buffer_append(out,"\"");
+                                buffer_append(out,"\n");
                                 currcol = 0;
                                 /* INDENT-S.  */
                                 if (line_prefix != NULL)
                                     {
-                                        printf("%s",line_prefix);
+                                        buffer_append(out,line_prefix);
                                         currcol = strlen (line_prefix);
                                     }
                                 if (indent)
                                     {
-                                        printf("        ");
+                                        buffer_append(out, "        ");
                                         currcol = (currcol + 8) & ~7;
                                     }
-                                printf("%s","\"");
+                                buffer_append(out,"\"");
                             }
                         /* Change currattr so that it matches attributes[i].  */
                         if (attributes[i] != currattr)
@@ -686,7 +740,7 @@ wrap (const char *line_prefix, int extra_indent,
                                         currattr |= ATTR_ESCAPE_SEQUENCE;
                                     }
                             }
-                        printf("%c",portion[i]); /* WAS             ostream_write_mem (stream, &portion[i], 1);*/
+                        buffer_append_char(out, portion[i]); /* WAS             ostream_write_mem (stream, &portion[i], 1);*/
                     }
 
                 /* Change currattr so that it becomes 0.  */
@@ -705,8 +759,8 @@ wrap (const char *line_prefix, int extra_indent,
                 if (!(currattr == 0))
                     abort ();
 
-                printf("%s","\"");
-                printf("%s","\n");
+                buffer_append(out,"\"");
+                buffer_append(out,"\n");
             }
 
             free (linebreaks);
@@ -726,6 +780,8 @@ wrap (const char *line_prefix, int extra_indent,
     if (conv != (iconv_t)(-1))
         iconv_close (conv);
 #endif
+    free(out);
+    return output_string;
 }
 
 int main(int ac, char **av)
@@ -734,6 +790,6 @@ int main(int ac, char **av)
         printf("Usage: %s [msgid|msgstr] STRING\n", av[0]);
         exit(EXIT_FAILURE);
     }
-    wrap (NULL, 0, av[1], av[2], 1, 79, "UTF-8");
+    printf("%s\n", wrap (NULL, 0, av[1], av[2], 1, 79, "UTF-8"));
 
 }
