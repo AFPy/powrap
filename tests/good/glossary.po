@@ -1,0 +1,33 @@
+# Copyright (C) 2001-2018, Python Software Foundation
+# For licence information, see README file.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Python 3\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2019-10-09 17:54+0200\n"
+"PO-Revision-Date: 2019-12-10 09:26+0100\n"
+"Last-Translator: Grenoya <grenoya@zarb.org>\n"
+"Language-Team: FRENCH <traductions@lists.afpy.org>\n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 2.2.1\n"
+
+#: ../Doc/glossary.rst:5
+msgid "Glossary"
+msgstr "Glossaire"
+
+#: ../Doc/glossary.rst:10
+msgid "``>>>``"
+msgstr "``>>>``"
+
+#: ../Doc/glossary.rst:12
+msgid ""
+"The default Python prompt of the interactive shell.  Often seen for code "
+"examples which can be executed interactively in the interpreter."
+msgstr ""
+"L'invite de commande utilisée par défaut dans l'interpréteur interactif. On "
+"la voit souvent dans des exemples de code qui peuvent être exécutés "
+"interactivement dans l'interpréteur."
