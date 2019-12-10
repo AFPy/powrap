@@ -3,6 +3,7 @@
 """Fix style of uncommited po files, or all if --all is given.
 """
 
+import argparse
 import sys
 from typing import Iterable
 from pathlib import Path
@@ -51,7 +52,8 @@ def fix_style(po_files, no_wrap=False, quiet=False):
 
 
 def parse_args():
-    import argparse
+    """Parse powrap command line arguments.
+    """
 
     def path(path_str):
         path_obj = Path(path_str)
@@ -99,11 +101,13 @@ def parse_args():
     args = parser.parse_args()
     if not args.po_files and not args.modified:
         parser.print_help()
-        exit(1)
+        sys.exit(1)
     return args
 
 
 def main():
+    """Powrap main entrypoint (parsing command line and all).
+    """
     args = parse_args()
     if args.modified:
         git_status = check_output(["git", "status", "--porcelain"], encoding="utf-8")
