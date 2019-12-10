@@ -1,5 +1,9 @@
-setuptools
-wheel
-twine
 black
+black
+flake8
+mypy
 pip-tools
+pylint
+pytest
+tox
+twine

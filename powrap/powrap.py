@@ -4,7 +4,7 @@
 """
 
 import sys
-from shlex import quote
+from typing import Iterable
 from pathlib import Path
 from subprocess import check_output, run
 from tempfile import NamedTemporaryFile
@@ -14,7 +14,7 @@ from tqdm import tqdm
 from powrap import __version__
 
 
-def check_style(po_files, no_wrap=False, quiet=False):
+def check_style(po_files: Iterable[str], no_wrap=False, quiet=False):
     """Check style of given po_files
     """
     to_fix = []
