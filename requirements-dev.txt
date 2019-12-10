@@ -9,19 +9,19 @@ astroid==2.3.3            # via pylint
 attrs==19.3.0             # via black, pytest
 black==19.10b0
 bleach==3.1.0             # via readme-renderer
-certifi==2019.9.11        # via requests
+certifi==2019.11.28       # via requests
 cffi==1.13.2              # via cryptography
 chardet==3.0.4            # via requests
 click==7.0                # via black, pip-tools
 cryptography==2.8         # via secretstorage
 docutils==0.15.2          # via readme-renderer
-entrypoints==0.3          # via flake8, keyring
+entrypoints==0.3          # via flake8
 filelock==3.0.12          # via tox
 flake8==3.7.9
 idna==2.8                 # via requests
 isort==4.3.21             # via pylint
 jeepney==0.4.1            # via secretstorage
-keyring==19.2.0           # via twine
+keyring==20.0.0           # via twine
 lazy-object-proxy==1.4.3  # via astroid
 mccabe==0.6.1             # via flake8, pylint
 more-itertools==8.0.2     # via pytest
@@ -36,20 +36,20 @@ py==1.8.0                 # via pytest, tox
 pycodestyle==2.5.0        # via flake8
 pycparser==2.19           # via cffi
 pyflakes==2.1.1           # via flake8
-pygments==2.4.2           # via readme-renderer
+pygments==2.5.2           # via readme-renderer
 pylint==2.4.4
 pyparsing==2.4.5          # via packaging
 pytest==5.3.1
 readme-renderer==24.0     # via twine
-regex==2019.11.1          # via black
+regex==2019.12.9          # via black
 requests-toolbelt==0.9.1  # via twine
 requests==2.22.0          # via requests-toolbelt, twine
 secretstorage==3.1.1      # via keyring
 six==1.13.0               # via astroid, bleach, cryptography, packaging, pip-tools, readme-renderer, tox
 toml==0.10.0              # via black, tox
 tox==3.14.2
-tqdm==4.39.0              # via twine
-twine==3.1.0
+tqdm==4.40.2              # via twine
+twine==3.1.1
 typed-ast==1.4.0          # via black, mypy
 typing-extensions==3.7.4.1  # via mypy
 urllib3==1.25.7           # via requests
