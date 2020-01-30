@@ -36,7 +36,6 @@ def check_style(po_files: Iterable[str], no_wrap=False, quiet=False):
 def fix_style(po_files, no_wrap=False, quiet=False):
     """Fix style of given po_files.
     """
-    fixed = []
     for po_path in tqdm(po_files, desc="Fixing wrapping of po files", disable=quiet):
         with open(po_path, encoding="UTF-8") as po_file:
             po_content = po_file.read()
@@ -44,11 +43,6 @@ def fix_style(po_files, no_wrap=False, quiet=False):
         if no_wrap:
             args[1:1] = ["--no-wrap"]
         run(args, encoding="utf-8", check=True, input=po_content)
-        with open(po_path, encoding="UTF-8") as po_file:
-            new_po_content = po_file.read()
-        if po_content != new_po_content:
-            fixed.append(po_path)
-    return fixed
 
 
 def parse_args():
@@ -128,5 +122,4 @@ def main():
             print("Would rewrap:", *to_fix, sep="\n- ")
         sys.exit(1 if to_fix else 0)
     else:
-        fixed = fix_style(args.po_files, args.no_wrap, args.quiet)
-        sys.exit(1 if fixed else 0)
+        fix_style(args.po_files, args.no_wrap, args.quiet)
