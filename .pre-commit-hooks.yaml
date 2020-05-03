@@ -1,0 +1,6 @@
+-   id: powrap
+    name: powrap
+    entry: powrap
+    language: python
+    files: \.po$
+    args: ['--modified', '--quiet']
