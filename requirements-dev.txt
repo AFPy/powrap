@@ -39,7 +39,7 @@ pyflakes==2.1.1           # via flake8
 pygments==2.5.2           # via readme-renderer
 pylint==2.5.2             # via -r requirements-dev.in
 pyparsing==2.4.5          # via packaging
-pytest==5.4.2             # via -r requirements-dev.in
+pytest==5.4.3             # via -r requirements-dev.in
 readme-renderer==24.0     # via twine
 regex==2019.12.9          # via black
 requests-toolbelt==0.9.1  # via twine
