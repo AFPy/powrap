@@ -19,6 +19,15 @@ This package only runs ``msgcat`` from the ``gettext`` package, so if
 your distribution don't have it, it just won't work.
 
 
+Dependencies
+============
+
+``powrap`` relies on ``msgcat`` from ``gettext`` so you'll have to
+install ``gettext`` first, for example on Debian run::
+
+  apt install gettext
+
+
 Contributing
 ============
 
