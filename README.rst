@@ -15,9 +15,6 @@ your ``.po`` files are versionned).
 
 if ``--quiet`` is given, the progress bar will not be shown
 
-This package only runs ``msgcat`` from the ``gettext`` package, so if
-your distribution don't have it, it just won't work.
-
 
 Dependencies
 ============
