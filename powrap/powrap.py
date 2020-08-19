@@ -3,7 +3,10 @@
 """Fix style of uncommited po files, or all if --all is given.
 """
 
-from shlex import quote
+import argparse
+import sys
+from typing import Iterable
+from pathlib import Path
 from subprocess import check_output, run
 from tempfile import NamedTemporaryFile
 
@@ -12,7 +15,7 @@ from tqdm import tqdm
 from powrap import __version__
 
 
-def check_style(po_files, no_wrap=False, quiet=False):
+def check_style(po_files: Iterable[str], no_wrap=False, quiet=False):
     """Check style of given po_files
     """
     to_fix = []
@@ -31,9 +34,8 @@ def check_style(po_files, no_wrap=False, quiet=False):
 
 
 def fix_style(po_files, no_wrap=False, quiet=False):
-    """Fix style of given po_files
+    """Fix style of given po_files.
     """
-    fixed = []
     for po_path in tqdm(po_files, desc="Fixing wrapping of po files", disable=quiet):
         with open(po_path, encoding="UTF-8") as po_file:
             po_content = po_file.read()
@@ -41,15 +43,27 @@ def fix_style(po_files, no_wrap=False, quiet=False):
         if no_wrap:
             args[1:1] = ["--no-wrap"]
         run(args, encoding="utf-8", check=True, input=po_content)
-        with open(po_path, encoding="UTF-8") as po_file:
-            new_po_content = po_file.read()
-        if po_content != new_po_content:
-            fixed.append(po_path)
-    return fixed
 
 
-def main():
-    import argparse
+def parse_args():
+    """Parse powrap command line arguments.
+    """
+
+    def path(path_str):
+        path_obj = Path(path_str)
+        if not path_obj.exists():
+            raise argparse.ArgumentTypeError(
+                "File {!r} does not exists.".format(path_str)
+            )
+        if not path_obj.is_file():
+            raise argparse.ArgumentTypeError("{!r} is not a file.".format(path_str))
+        try:
+            path_obj.read_text()
+        except PermissionError:
+            raise argparse.ArgumentTypeError(
+                "{!r}: Permission denied.".format(path_str)
+            )
+        return path_obj
 
     parser = argparse.ArgumentParser(
         prog="powrap",
@@ -77,27 +91,35 @@ def main():
         action="store_true",
         help="see `man msgcat`, usefull to sed right after.",
     )
-    parser.add_argument("po_files", nargs="*", help="po files.")
+    parser.add_argument("po_files", nargs="*", help="po files.", type=path)
     args = parser.parse_args()
     if not args.po_files and not args.modified:
         parser.print_help()
-        exit(1)
+        sys.exit(1)
+    return args
+
+
+def main():
+    """Powrap main entrypoint (parsing command line and all).
+    """
+    args = parse_args()
     if args.modified:
         git_status = check_output(["git", "status", "--porcelain"], encoding="utf-8")
         git_status_lines = [
             line.split(maxsplit=2) for line in git_status.split("\n") if line
         ]
         args.po_files.extend(
-            filename
+            Path(filename)
             for status, filename in git_status_lines
             if filename.endswith(".po")
         )
+    if not args.po_files:
+        print("Nothing to do, exiting.")
+        sys.exit(0)
     if args.check:
         to_fix = check_style(args.po_files, args.no_wrap, args.quiet)
         if to_fix:
             print("Would rewrap:", *to_fix, sep="\n- ")
-        code = 1 if to_fix else 0
+        sys.exit(1 if to_fix else 0)
     else:
-        fixed = fix_style(args.po_files, args.no_wrap, args.quiet)
-        code = 1 if fixed else 0
-    exit(code)
+        fix_style(args.po_files, args.no_wrap, args.quiet)
