@@ -7,7 +7,7 @@ import argparse
 import sys
 from typing import Iterable
 from pathlib import Path
-from subprocess import check_output, run
+from subprocess import check_output, run, CalledProcessError
 from tempfile import NamedTemporaryFile
 
 from tqdm import tqdm
@@ -20,13 +20,21 @@ def check_style(po_files: Iterable[str], no_wrap=False, quiet=False):
     """
     to_fix = []
     for po_path in tqdm(po_files, desc="Checking wrapping of po files", disable=quiet):
-        with open(po_path, encoding="UTF-8") as po_file:
-            po_content = po_file.read()
+        try:
+            with open(po_path, encoding="UTF-8") as po_file:
+                po_content = po_file.read()
+        except OSError as e:
+            tqdm.write(f"Error opening '{po_path}': {e}")
+            continue
         with NamedTemporaryFile("w+") as tmpfile:
             args = ["msgcat", "-", "-o", tmpfile.name]
             if no_wrap:
                 args[1:1] = ["--no-wrap"]
-            run(args, encoding="utf-8", check=True, input=po_content)
+            try:
+                run(args, encoding="utf-8", check=True, input=po_content)
+            except CalledProcessError as e:
+                tqdm.write(f"Error processing '{po_path}': {e}")
+                continue
             new_po_content = tmpfile.read()
             if po_content != new_po_content:
                 to_fix.append(po_path)
@@ -42,7 +50,10 @@ def fix_style(po_files, no_wrap=False, quiet=False):
         args = ["msgcat", "-", "-o", po_path]
         if no_wrap:
             args[1:1] = ["--no-wrap"]
-        run(args, encoding="utf-8", check=True, input=po_content)
+        try:
+            run(args, encoding="utf-8", check=True, input=po_content)
+        except CalledProcessError as e:
+            tqdm.write(f"Error processing '{po_path}': {e}")
 
 
 def parse_args():
