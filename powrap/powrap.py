@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 
-"""Fix style of uncommited po files, or all if --all is given.
-"""
-
+"""Fix style of uncommited po files, or all if --all is given."""
 
 import argparse
 import math
@@ -19,21 +17,24 @@ from powrap import __version__
 
 def check_style(po_files: Iterable[str], no_wrap: bool = False, quiet: bool = False):
     """Check style of given po_files."""
+    _pofile_kwargs = {}
+    if no_wrap:
+        _pofile_kwargs["wrapwidth"] = math.inf
     to_fix = []
     for po_path in tqdm(po_files, desc="Checking wrapping of po files", disable=quiet):
         with open(po_path, encoding="UTF-8") as po_file:
             po_content = po_file.read()
-        if str(polib.pofile(po_path)) != po_content:
+        if str(polib.pofile(po_path, **_pofile_kwargs)) != po_content:
             to_fix.append(po_path)
     return to_fix
 
 
 def fix_style(po_files: Iterable[str], no_wrap: bool = False, quiet: bool = False):
     """Fix style of given po_files."""
+    _pofile_kwargs = {}
+    if no_wrap:
+        _pofile_kwargs["wrapwidth"] = math.inf
     for po_path in tqdm(po_files, desc="Fixing wrapping of po files", disable=quiet):
-        _pofile_kwargs = {}
-        if no_wrap:
-            _pofile_kwargs["wrapwidth"] = math.inf
         polib.pofile(po_path, **_pofile_kwargs).save(po_path)
 
 
