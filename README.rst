@@ -16,15 +16,6 @@ your ``.po`` files are versionned).
 if ``--quiet`` is given, the progress bar will not be shown
 
 
-Dependencies
-============
-
-``powrap`` relies on ``msgcat`` from ``gettext`` so you'll have to
-install ``gettext`` first, for example on Debian run::
-
-  apt install gettext
-
-
 Contributing
 ============
 

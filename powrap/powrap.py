@@ -3,51 +3,42 @@
 """Fix style of uncommited po files, or all if --all is given.
 """
 
+
 import argparse
+import math
 import sys
 from typing import Iterable
 from pathlib import Path
-from subprocess import check_output, run
-from tempfile import NamedTemporaryFile
+from subprocess import check_output
 
+import polib
 from tqdm import tqdm
 
 from powrap import __version__
 
 
-def check_style(po_files: Iterable[str], no_wrap=False, quiet=False):
-    """Check style of given po_files
-    """
+def check_style(po_files: Iterable[str], no_wrap: bool = False, quiet: bool = False):
+    """Check style of given po_files."""
     to_fix = []
     for po_path in tqdm(po_files, desc="Checking wrapping of po files", disable=quiet):
         with open(po_path, encoding="UTF-8") as po_file:
             po_content = po_file.read()
-        with NamedTemporaryFile("w+") as tmpfile:
-            args = ["msgcat", "-", "-o", tmpfile.name]
-            if no_wrap:
-                args[1:1] = ["--no-wrap"]
-            run(args, encoding="utf-8", check=True, input=po_content)
-            new_po_content = tmpfile.read()
-            if po_content != new_po_content:
-                to_fix.append(po_path)
+        if str(polib.pofile(po_path)) != po_content:
+            to_fix.append(po_path)
     return to_fix
 
 
-def fix_style(po_files, no_wrap=False, quiet=False):
-    """Fix style of given po_files.
-    """
+def fix_style(po_files: Iterable[str], no_wrap: bool = False, quiet: bool = False):
+    """Fix style of given po_files."""
     for po_path in tqdm(po_files, desc="Fixing wrapping of po files", disable=quiet):
-        with open(po_path, encoding="UTF-8") as po_file:
-            po_content = po_file.read()
-        args = ["msgcat", "-", "-o", po_path]
+        _pofile_kwargs = {}
         if no_wrap:
-            args[1:1] = ["--no-wrap"]
-        run(args, encoding="utf-8", check=True, input=po_content)
+            _pofile_kwargs["wrapwidth"] = math.inf
+        polib.pofile(po_path, **_pofile_kwargs).save(po_path)
 
 
 def parse_args():
-    """Parse powrap command line arguments.
-    """
+    """Parse powrap command line arguments."""
 
     def path(path_str):
         path_obj = Path(path_str)
@@ -100,8 +91,7 @@ def parse_args():
 
 
 def main():
-    """Powrap main entrypoint (parsing command line and all).
-    """
+    """Powrap main entrypoint (parsing command line and all)."""
     args = parse_args()
     if args.modified:
         git_status = check_output(["git", "status", "--porcelain"], encoding="utf-8")
