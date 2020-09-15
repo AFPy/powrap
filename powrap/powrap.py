@@ -17,9 +17,7 @@ from powrap import __version__
 
 def check_style(po_files: Iterable[str], no_wrap: bool = False, quiet: bool = False):
     """Check style of given po_files."""
-    _pofile_kwargs = {}
-    if no_wrap:
-        _pofile_kwargs["wrapwidth"] = math.inf
+    _pofile_kwargs = {"wrapwidth": math.inf if no_wrap else 78}
     to_fix = []
     for po_path in tqdm(po_files, desc="Checking wrapping of po files", disable=quiet):
         with open(po_path, encoding="UTF-8") as po_file:
@@ -31,9 +29,7 @@ def check_style(po_files: Iterable[str], no_wrap: bool = False, quiet: bool = Fa
 
 def fix_style(po_files: Iterable[str], no_wrap: bool = False, quiet: bool = False):
     """Fix style of given po_files."""
-    _pofile_kwargs = {}
-    if no_wrap:
-        _pofile_kwargs["wrapwidth"] = math.inf
+    _pofile_kwargs = {"wrapwidth": math.inf if no_wrap else 78}
     for po_path in tqdm(po_files, desc="Fixing wrapping of po files", disable=quiet):
         polib.pofile(po_path, **_pofile_kwargs).save(po_path)
 
