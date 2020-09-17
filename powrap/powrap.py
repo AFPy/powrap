@@ -22,8 +22,8 @@ def check_style(po_files: Iterable[str], no_wrap=False, quiet=False):
         try:
             with open(po_path, encoding="UTF-8") as po_file:
                 po_content = po_file.read()
-        except OSError as e:
-            tqdm.write(f"Error opening '{po_path}': {e}")
+        except OSError as open_error:
+            tqdm.write(f"Error opening '{po_path}': {open_error}")
             continue
         with NamedTemporaryFile("w+") as tmpfile:
             args = ["msgcat", "-", "-o", tmpfile.name]
@@ -31,8 +31,8 @@ def check_style(po_files: Iterable[str], no_wrap=False, quiet=False):
                 args[1:1] = ["--no-wrap"]
             try:
                 run(args, encoding="utf-8", check=True, input=po_content)
-            except CalledProcessError as e:
-                tqdm.write(f"Error processing '{po_path}': {e}")
+            except CalledProcessError as run_error:
+                tqdm.write(f"Error processing '{po_path}': {run_error}")
                 continue
             new_po_content = tmpfile.read()
             if po_content != new_po_content:
@@ -50,8 +50,8 @@ def fix_style(po_files, no_wrap=False, quiet=False):
             args[1:1] = ["--no-wrap"]
         try:
             run(args, encoding="utf-8", check=True, input=po_content)
-        except CalledProcessError as e:
-            tqdm.write(f"Error processing '{po_path}': {e}")
+        except CalledProcessError as run_error:
+            tqdm.write(f"Error processing '{po_path}': {run_error}")
 
 
 def parse_args():
@@ -67,10 +67,10 @@ def parse_args():
             raise argparse.ArgumentTypeError("{!r} is not a file.".format(path_str))
         try:
             path_obj.read_text()
-        except PermissionError:
+        except PermissionError as read_error:
             raise argparse.ArgumentTypeError(
                 "{!r}: Permission denied.".format(path_str)
-            )
+            ) from read_error
         return path_obj
 
     parser = argparse.ArgumentParser(
