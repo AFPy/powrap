@@ -16,8 +16,7 @@ from powrap import __version__
 
 
 def check_style(po_files: Iterable[str], no_wrap=False, quiet=False):
-    """Check style of given po_files
-    """
+    """Check style of given po_files"""
     to_fix = []
     for po_path in tqdm(po_files, desc="Checking wrapping of po files", disable=quiet):
         try:
@@ -42,8 +41,7 @@ def check_style(po_files: Iterable[str], no_wrap=False, quiet=False):
 
 
 def fix_style(po_files, no_wrap=False, quiet=False):
-    """Fix style of given po_files.
-    """
+    """Fix style of given po_files."""
     for po_path in tqdm(po_files, desc="Fixing wrapping of po files", disable=quiet):
         with open(po_path, encoding="UTF-8") as po_file:
             po_content = po_file.read()
@@ -57,8 +55,7 @@ def fix_style(po_files, no_wrap=False, quiet=False):
 
 
 def parse_args():
-    """Parse powrap command line arguments.
-    """
+    """Parse powrap command line arguments."""
 
     def path(path_str):
         path_obj = Path(path_str)
@@ -111,8 +108,7 @@ def parse_args():
 
 
 def main():
-    """Powrap main entrypoint (parsing command line and all).
-    """
+    """Powrap main entrypoint (parsing command line and all)."""
     args = parse_args()
     if args.modified:
         git_status = check_output(["git", "status", "--porcelain"], encoding="utf-8")
