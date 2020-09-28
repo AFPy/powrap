@@ -32,9 +32,9 @@ def test_fileread_error(po_file):
 def test_wrong_msgcat(po_file):
     """ test if msgcat is not available"""
     environ_saved = os.environ["PATH"]
-    os.environ["PATH"] = os.environ["PATH"].split(":")[0]
+    os.environ["PATH"] = ""
     with pytest.raises(SystemExit) as sysexit:
-        result = powrap.check_style([po_file])
+        powrap.check_style([po_file])
     os.environ["PATH"] = environ_saved
     assert sysexit.type == SystemExit
     assert sysexit.value.code == 127
