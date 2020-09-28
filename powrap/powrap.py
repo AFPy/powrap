@@ -34,6 +34,9 @@ def check_style(po_files: Iterable[str], no_wrap=False, quiet=False):
             except CalledProcessError as run_error:
                 tqdm.write(f"Error processing '{po_path}': {run_error}")
                 continue
+            except FileNotFoundError as run_error:
+                tqdm.write("Error running " + " ".join(args) + f": {run_error}")
+                sys.exit(127)
             new_po_content = tmpfile.read()
             if po_content != new_po_content:
                 to_fix.append(po_path)
@@ -52,6 +55,9 @@ def fix_style(po_files, no_wrap=False, quiet=False):
             run(args, encoding="utf-8", check=True, input=po_content)
         except CalledProcessError as run_error:
             tqdm.write(f"Error processing '{po_path}': {run_error}")
+        except FileNotFoundError as run_error:
+            tqdm.write("Error running " + " ".join(args) + f": {run_error}")
+            sys.exit(127)
 
 
 def parse_args():
@@ -76,6 +82,10 @@ def parse_args():
     parser = argparse.ArgumentParser(
         prog="powrap",
         description="Ensure po files are using the standard gettext format",
+        epilog="""exit code:
+    0:nothing to do
+    1:would rewrap
+  127:error running msgcat""",
     )
     parser.add_argument(
         "--modified", "-m", action="store_true", help="Use git to find modified files."
