@@ -7,7 +7,7 @@ import argparse
 import sys
 from typing import Iterable
 from pathlib import Path
-from subprocess import check_output, run
+from subprocess import check_output, run, CalledProcessError
 from tempfile import NamedTemporaryFile
 
 from tqdm import tqdm
@@ -16,17 +16,27 @@ from powrap import __version__
 
 
 def check_style(po_files: Iterable[str], no_wrap=False, quiet=False):
-    """Check style of given po_files
-    """
+    """Check style of given po_files"""
     to_fix = []
     for po_path in tqdm(po_files, desc="Checking wrapping of po files", disable=quiet):
-        with open(po_path, encoding="UTF-8") as po_file:
-            po_content = po_file.read()
+        try:
+            with open(po_path, encoding="UTF-8") as po_file:
+                po_content = po_file.read()
+        except OSError as open_error:
+            tqdm.write(f"Error opening '{po_path}': {open_error}")
+            continue
         with NamedTemporaryFile("w+") as tmpfile:
             args = ["msgcat", "-", "-o", tmpfile.name]
             if no_wrap:
                 args[1:1] = ["--no-wrap"]
-            run(args, encoding="utf-8", check=True, input=po_content)
+            try:
+                run(args, encoding="utf-8", check=True, input=po_content)
+            except CalledProcessError as run_error:
+                tqdm.write(f"Error processing '{po_path}': {run_error}")
+                continue
+            except FileNotFoundError as run_error:
+                tqdm.write("Error running " + " ".join(args) + f": {run_error}")
+                sys.exit(127)
             new_po_content = tmpfile.read()
             if po_content != new_po_content:
                 to_fix.append(po_path)
@@ -34,20 +44,24 @@ def check_style(po_files: Iterable[str], no_wrap=False, quiet=False):
 
 
 def fix_style(po_files, no_wrap=False, quiet=False):
-    """Fix style of given po_files.
-    """
+    """Fix style of given po_files."""
     for po_path in tqdm(po_files, desc="Fixing wrapping of po files", disable=quiet):
         with open(po_path, encoding="UTF-8") as po_file:
             po_content = po_file.read()
         args = ["msgcat", "-", "-o", po_path]
         if no_wrap:
             args[1:1] = ["--no-wrap"]
-        run(args, encoding="utf-8", check=True, input=po_content)
+        try:
+            run(args, encoding="utf-8", check=True, input=po_content)
+        except CalledProcessError as run_error:
+            tqdm.write(f"Error processing '{po_path}': {run_error}")
+        except FileNotFoundError as run_error:
+            tqdm.write("Error running " + " ".join(args) + f": {run_error}")
+            sys.exit(127)
 
 
 def parse_args():
-    """Parse powrap command line arguments.
-    """
+    """Parse powrap command line arguments."""
 
     def path(path_str):
         path_obj = Path(path_str)
@@ -59,15 +73,19 @@ def parse_args():
             raise argparse.ArgumentTypeError("{!r} is not a file.".format(path_str))
         try:
             path_obj.read_text()
-        except PermissionError:
+        except PermissionError as read_error:
             raise argparse.ArgumentTypeError(
                 "{!r}: Permission denied.".format(path_str)
-            )
+            ) from read_error
         return path_obj
 
     parser = argparse.ArgumentParser(
         prog="powrap",
         description="Ensure po files are using the standard gettext format",
+        epilog="""exit code:
+    0:nothing to do
+    1:would rewrap
+  127:error running msgcat""",
     )
     parser.add_argument(
         "--modified", "-m", action="store_true", help="Use git to find modified files."
@@ -100,8 +118,7 @@ def parse_args():
 
 
 def main():
-    """Powrap main entrypoint (parsing command line and all).
-    """
+    """Powrap main entrypoint (parsing command line and all)."""
     args = parse_args()
     if args.modified:
         git_status = check_output(["git", "status", "--porcelain"], encoding="utf-8")
