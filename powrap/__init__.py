@@ -5,4 +5,4 @@ your ``.po`` files are versionned).
 
 __author__ = """Julien Palard"""
 __email__ = "julien@palard.fr"
-__version__ = "0.3.2"
+__version__ = "0.3.3"
