@@ -1,4 +1,4 @@
-black
+-r requirements.txt
 black
 flake8
 mypy

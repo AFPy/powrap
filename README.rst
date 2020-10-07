@@ -28,6 +28,26 @@ install ``gettext`` first, for example on Debian run::
 Contributing
 ============
 
-Start by creating a venv and installing `requirements-dev.in`.
+Start by creating a venv and ``pip install -r requirements-dev.txt`` in
+it.
 
-To run the tests, use `tox -p auto`.
+To run the tests, use ``tox -p auto``.
+
+To install ``powrap`` in the current venv run ``pip install -e .``.
+
+
+Dependencies
+------------
+
+We're using ``pip-tools`` to pin our dependencies, but in the
+``setup.cfg`` our dependencies are *not* pinned, the goal is to ensure
+``powrap`` can easily be installed along with other tools.
+
+Dependencies pinning is only done to have a reproducible development
+environment and corresponding env in the CI::
+
+  pip-compile setup.py  # generates requirements.txt
+  pip-compile requirements-dev.in  # generates requirements-dev.txt
+
+It's possible to upgrade pinned dependencies with the ``--upgrade``
+flag of ``pip-compile``.

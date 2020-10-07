@@ -48,7 +48,7 @@ secretstorage==3.1.2      # via keyring
 six==1.15.0               # via astroid, bleach, cryptography, packaging, pip-tools, readme-renderer, tox, virtualenv
 toml==0.10.1              # via black, pylint, tox
 tox==3.15.2               # via -r requirements-dev.in
-tqdm==4.46.1              # via twine
+tqdm==4.50.1              # via -r requirements.txt, twine
 twine==3.1.1              # via -r requirements-dev.in
 typed-ast==1.4.1          # via black, mypy
 typing-extensions==3.7.4.2  # via mypy
