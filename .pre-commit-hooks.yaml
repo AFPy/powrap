@@ -3,4 +3,4 @@
     entry: powrap
     language: python
     files: \.po$
-    args: ['--modified', '--quiet']
+    args: ['--quiet']
