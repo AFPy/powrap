@@ -16,7 +16,8 @@ your ``.po`` files are versionned).
 if ``--quiet`` is given, the progress bar will not be shown
 
 
-### Powrap is part of poutils!
+Powrap is part of poutils!
+==========================
 
 `Poutils <https://pypi.org/project/poutils>`_ (``.po`` utils) is a metapackage to easily install useful Python tools to use with po files
 and `powrap` is a part of it! Go check out `Poutils <https://pypi.org/project/poutils>`_ to discover the other tools!
