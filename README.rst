@@ -18,8 +18,8 @@ if ``--quiet`` is given, the progress bar will not be shown
 
 ### Powrap is part of poutils!
 
-[Poutils](https://pypi.org/project/poutils) (`.po` utils) is is a metapackage to easily install usefull Python tools to use with po files
-and `powrap` is a part of it! Go check out [Poutils](https://pypi.org/project/poutils) to discover the other useful tools for `po` file related translation!
+`Poutils <https://pypi.org/project/poutils>`_ (``.po`` utils) is a metapackage to easily install useful Python tools to use with po files
+and `powrap` is a part of it! Go check out `Poutils <https://pypi.org/project/poutils>`_ to discover the other tools!
 
 
 Dependencies
