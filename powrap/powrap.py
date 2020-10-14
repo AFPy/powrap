@@ -104,14 +104,14 @@ def main():
     """
     args = parse_args()
     if args.modified:
-        git_status = check_output(["git", "status", "--porcelain"], encoding="utf-8")
+        git_status = check_output(["git", "status", "--porcelain", "--no-renames"], encoding="utf-8")
         git_status_lines = [
             line.split(maxsplit=2) for line in git_status.split("\n") if line
         ]
         args.po_files.extend(
             Path(filename)
             for status, filename in git_status_lines
-            if filename.endswith(".po")
+            if filename.endswith(".po") and status != "D"
         )
     if not args.po_files:
         print("Nothing to do, exiting.")
