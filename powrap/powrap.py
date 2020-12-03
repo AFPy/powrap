@@ -6,6 +6,7 @@
 import argparse
 import sys
 from typing import Iterable
+import difflib
 from pathlib import Path
 from subprocess import check_output, run, CalledProcessError
 from tempfile import NamedTemporaryFile
@@ -15,9 +16,12 @@ from tqdm import tqdm
 from powrap import __version__
 
 
-def check_style(po_files: Iterable[str], no_wrap=False, quiet=False):
-    """Check style of given po_files"""
-    to_fix = []
+def check_style(po_files: Iterable[str], no_wrap=False, quiet=False, diff=False) -> int:
+    """Check style of given po_files.
+
+    Prints errors on stderr and returns the number of errors found.
+    """
+    errors = 0
     for po_path in tqdm(po_files, desc="Checking wrapping of po files", disable=quiet):
         try:
             with open(po_path, encoding="UTF-8") as po_file:
@@ -39,8 +43,15 @@ def check_style(po_files: Iterable[str], no_wrap=False, quiet=False):
                 sys.exit(127)
             new_po_content = tmpfile.read()
             if po_content != new_po_content:
-                to_fix.append(po_path)
-    return to_fix
+                errors += 1
+                print("Would rewrap:", po_path, file=sys.stderr)
+                if diff:
+                    for line in difflib.unified_diff(
+                        po_content.splitlines(keepends=True),
+                        new_po_content.splitlines(keepends=True),
+                    ):
+                        print(line, end="", file=sys.stderr)
+    return errors
 
 
 def fix_style(po_files, no_wrap=False, quiet=False):
@@ -94,6 +105,12 @@ def parse_args():
         "--quiet", "-q", action="store_true", help="Do not show progress bar."
     )
     parser.add_argument(
+        "--diff",
+        "-d",
+        action="store_true",
+        help="Don't write the files back, just output a diff for each file on stdout (implies --check).",
+    )
+    parser.add_argument(
         "--check",
         action="store_true",
         help="Don't write the files back, just return the status. "
@@ -135,10 +152,8 @@ def main():
     if not args.po_files:
         print("Nothing to do, exiting.")
         sys.exit(0)
-    if args.check:
-        to_fix = check_style(args.po_files, args.no_wrap, args.quiet)
-        if to_fix:
-            print("Would rewrap:", *to_fix, sep="\n- ")
-        sys.exit(1 if to_fix else 0)
+    if args.check or args.diff:
+        errors = check_style(args.po_files, args.no_wrap, args.quiet, args.diff)
+        sys.exit(errors > 0)
     else:
         fix_style(args.po_files, args.no_wrap, args.quiet)
