@@ -20,7 +20,7 @@ jobs:
           - py_version: '3.7'
             env: py37
           - py_version: '3.8'
-            env: py38,flake8,mypy,black,pylint,pydocstyle,coverage
+            env: py38,flake8,mypy,black,pylint,pydocstyle
           - py_version: '3.9'
             env: py39
     steps:
