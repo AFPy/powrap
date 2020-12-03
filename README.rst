@@ -1,10 +1,7 @@
 powrap
 ======
 
-|build| |pypi|
-
-.. |build| image:: https://travis-ci.org/JulienPalard/powrap.svg?branch=master
-   :target: https://travis-ci.org/JulienPalard/powrap
+|pypi|
 
 .. |pypi| image:: https://img.shields.io/pypi/v/powrap.svg
    :target: https://pypi.python.org/pypi/powrap

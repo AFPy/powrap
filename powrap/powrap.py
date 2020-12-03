@@ -1,7 +1,4 @@
-#!/usr/bin/env python3
-
-"""Fix style of uncommited po files, or all if --all is given.
-"""
+"""Fix style of uncommited po files, or all if --all is given."""
 
 import argparse
 import sys
@@ -108,7 +105,8 @@ def parse_args():
         "--diff",
         "-d",
         action="store_true",
-        help="Don't write the files back, just output a diff for each file on stdout (implies --check).",
+        help="Don't write the files back, just output a diff for each file on stdout "
+        "(implies --check).",
     )
     parser.add_argument(
         "--check",
