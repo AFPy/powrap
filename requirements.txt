@@ -4,4 +4,5 @@
 #
 #    pip-compile setup.py
 #
-tqdm==4.51.0              # via powrap (setup.py)
+tqdm==4.56.1
+    # via powrap (setup.py)
