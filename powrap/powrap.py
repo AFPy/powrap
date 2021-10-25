@@ -2,6 +2,7 @@
 
 import argparse
 import sys
+import os
 from typing import Iterable
 import difflib
 from pathlib import Path
@@ -96,7 +97,18 @@ def parse_args():
   127:error running msgcat""",
     )
     parser.add_argument(
-        "--modified", "-m", action="store_true", help="Use git to find modified files."
+        "--modified",
+        "-m",
+        action="store_true",
+        help="Use git to find modified files instead of passing them as arguments.",
+    )
+    parser.add_argument(
+        "-C",
+        help="To use with --modified to tell where the git "
+        "repo is, in case it's not in the current working directory.",
+        type=Path,
+        dest="git_root",
+        default=Path.cwd(),
     )
     parser.add_argument(
         "--quiet", "-q", action="store_true", help="Do not show progress bar."
@@ -115,7 +127,6 @@ def parse_args():
         "Return code 0 means nothing would change.  "
         "Return code 1 means some files would be reformatted.",
     )
-
     parser.add_argument(
         "--version", action="version", version="%(prog)s " + __version__
     )
@@ -129,15 +140,21 @@ def parse_args():
     if not args.po_files and not args.modified:
         parser.print_help()
         sys.exit(1)
+    if args.po_files and args.modified:
+        parser.print_help()
+        sys.exit(1)
     return args
 
 
 def main():
     """Powrap main entrypoint (parsing command line and all)."""
     args = parse_args()
+    if args.git_root:
+        os.chdir(args.git_root)
     if args.modified:
         git_status = check_output(
-            ["git", "status", "--porcelain", "--no-renames"], encoding="utf-8"
+            ["git", "status", "--porcelain", "--no-renames"],
+            encoding="utf-8",
         )
         git_status_lines = [
             line.split(maxsplit=2) for line in git_status.split("\n") if line
