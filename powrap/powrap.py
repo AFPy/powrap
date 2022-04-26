@@ -1,4 +1,4 @@
-"""Fix style of uncommited po files, or all if --all is given."""
+"""Fix style of uncommitted po files, or all if --all is given."""
 
 import argparse
 import sys
@@ -133,7 +133,7 @@ def parse_args():
     parser.add_argument(
         "--no-wrap",
         action="store_true",
-        help="see `man msgcat`, usefull to sed right after.",
+        help="see `man msgcat`, useful to sed right after.",
     )
     parser.add_argument("po_files", nargs="*", help="po files.", type=path)
     args = parser.parse_args()

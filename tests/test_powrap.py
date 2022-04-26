@@ -15,7 +15,7 @@ def test_fail_on_bad_wrapping(po_file, capsys):
 
 
 @pytest.mark.parametrize("po_file", (FIXTURE_DIR / "good").glob("*.po"))
-def test_succees_on_good_wrapping(po_file, capsys):
+def test_success_on_good_wrapping(po_file, capsys):
     assert powrap.check_style([po_file]) == 0
     assert str(po_file) not in capsys.readouterr().err
 

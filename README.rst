@@ -7,8 +7,8 @@ powrap
    :target: https://pypi.python.org/pypi/powrap
 
 Script to fix indentation of given ``.po`` files. If ``--modified`` is
-given, it will only fix modified files according to git (usefull if
-your ``.po`` files are versionned).
+given, it will only fix modified files according to git (useful if
+your ``.po`` files are versioned).
 
 if ``--quiet`` is given, the progress bar will not be shown
 
