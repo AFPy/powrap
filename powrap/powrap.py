@@ -8,6 +8,7 @@ import difflib
 from pathlib import Path
 from subprocess import check_output, run, CalledProcessError
 from tempfile import NamedTemporaryFile
+from contextlib import suppress
 
 from tqdm import tqdm
 
@@ -27,7 +28,10 @@ def check_style(po_files: Iterable[str], no_wrap=False, quiet=False, diff=False)
         except OSError as open_error:
             tqdm.write(f"Error opening '{po_path}': {open_error}")
             continue
-        with NamedTemporaryFile("w+") as tmpfile:
+
+        delete = os.name == "posix" and sys.platform != "cygwin"
+
+        with NamedTemporaryFile("w+", delete=delete, encoding="utf-8") as tmpfile:
             args = ["msgcat", "-", "-o", tmpfile.name]
             if no_wrap:
                 args[1:1] = ["--no-wrap"]
@@ -49,6 +53,8 @@ def check_style(po_files: Iterable[str], no_wrap=False, quiet=False, diff=False)
                         new_po_content.splitlines(keepends=True),
                     ):
                         print(line, end="", file=sys.stderr)
+        if not delete:
+            os.remove(tmpfile.name)
     return errors
 
 
@@ -80,12 +86,13 @@ def parse_args():
             )
         if not path_obj.is_file():
             raise argparse.ArgumentTypeError("{!r} is not a file.".format(path_str))
-        try:
-            path_obj.read_text()
-        except PermissionError as read_error:
-            raise argparse.ArgumentTypeError(
-                "{!r}: Permission denied.".format(path_str)
-            ) from read_error
+        with suppress(UnicodeDecodeError):  # Ignore unicode errors
+            try:
+                path_obj.read_text()
+            except PermissionError as read_error:
+                raise argparse.ArgumentTypeError(
+                    "{!r}: Permission denied.".format(path_str)
+                ) from read_error
         return path_obj
 
     parser = argparse.ArgumentParser(
