@@ -8,7 +8,6 @@ import difflib
 from pathlib import Path
 from subprocess import check_output, run, CalledProcessError
 from tempfile import NamedTemporaryFile
-from contextlib import suppress
 
 from tqdm import tqdm
 
@@ -86,13 +85,12 @@ def parse_args():
             )
         if not path_obj.is_file():
             raise argparse.ArgumentTypeError("{!r} is not a file.".format(path_str))
-        with suppress(UnicodeDecodeError):  # Ignore unicode errors
-            try:
-                path_obj.read_text()
-            except PermissionError as read_error:
-                raise argparse.ArgumentTypeError(
-                    "{!r}: Permission denied.".format(path_str)
-                ) from read_error
+        try:
+            path_obj.read_text(encoding="utf-8")
+        except PermissionError as read_error:
+            raise argparse.ArgumentTypeError(
+                "{!r}: Permission denied.".format(path_str)
+            ) from read_error
         return path_obj
 
     parser = argparse.ArgumentParser(
