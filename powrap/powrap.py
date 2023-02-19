@@ -3,73 +3,58 @@
 import argparse
 import sys
 import os
-from typing import Iterable
 import difflib
 from pathlib import Path
-from subprocess import check_output, run, CalledProcessError
-from tempfile import NamedTemporaryFile
+from subprocess import check_output
 
+from polib import pofile
 from tqdm import tqdm
 
 from powrap import __version__
 
 
-def check_style(po_files: Iterable[str], no_wrap=False, quiet=False, diff=False) -> int:
-    """Check style of given po_files.
-
-    Prints errors on stderr and returns the number of errors found.
-    """
-    errors = 0
-    for po_path in tqdm(po_files, desc="Checking wrapping of po files", disable=quiet):
+def process(args: argparse.Namespace) -> int:
+    """Process the files. Returns an exit code."""
+    exit_with_error = False
+    exit_with_modified_files = False
+    if args.check:
+        desc = "Checking wrapping of po files"
+    else:
+        desc = "Fixing wrapping of po files"
+    for po_path in tqdm(args.po_files, desc=desc, disable=args.quiet):
         try:
-            with open(po_path, encoding="UTF-8") as po_file:
-                po_content = po_file.read()
-        except OSError as open_error:
-            tqdm.write(f"Error opening '{po_path}': {open_error}")
+            catalog = pofile(str(po_path), wrapwidth=args.width)
+        except OSError as error:
+            tqdm.write(f"Error reading PO file '{po_path}': {error}", file=sys.stderr)
+            exit_with_error = True
             continue
-        with NamedTemporaryFile("w+") as tmpfile:
-            args = ["msgcat", "-", "-o", tmpfile.name]
-            if no_wrap:
-                args[1:1] = ["--no-wrap"]
-            try:
-                run(args, encoding="utf-8", check=True, input=po_content)
-            except CalledProcessError as run_error:
-                tqdm.write(f"Error processing '{po_path}': {run_error}")
-                continue
-            except FileNotFoundError as run_error:
-                tqdm.write("Error running " + " ".join(args) + f": {run_error}")
-                sys.exit(127)
-            new_po_content = tmpfile.read()
-            if po_content != new_po_content:
-                errors += 1
-                print("Would rewrap:", po_path, file=sys.stderr)
-                if diff:
+        new_contents = str(catalog)
+        if args.check:
+            # Use the catalog's specified encoding detected by polib
+            old_contents = Path(po_path).read_text(encoding=catalog.encoding)
+            if new_contents != old_contents:
+                exit_with_modified_files = True
+                tqdm.write(f"Would rewrap: {po_path}", file=sys.stderr)
+                if args.diff:
                     for line in difflib.unified_diff(
-                        po_content.splitlines(keepends=True),
-                        new_po_content.splitlines(keepends=True),
+                        old_contents.splitlines(keepends=True),
+                        new_contents.splitlines(keepends=True),
                     ):
-                        print(line, end="", file=sys.stderr)
-    return errors
+                        tqdm.write(line, end="", file=sys.stderr)
+        else:
+            try:
+                po_path.write_text(new_contents, encoding=catalog.encoding)
+            except OSError as error:
+                tqdm.write(f"Error writing '{po_path}': {error}")
+                exit_with_error = True
+    if exit_with_error:
+        return 127
+    if exit_with_modified_files:
+        return 1
+    return 0
 
 
-def fix_style(po_files, no_wrap=False, quiet=False):
-    """Fix style of given po_files."""
-    for po_path in tqdm(po_files, desc="Fixing wrapping of po files", disable=quiet):
-        with open(po_path, encoding="UTF-8") as po_file:
-            po_content = po_file.read()
-        args = ["msgcat", "-", "-o", po_path]
-        if no_wrap:
-            args[1:1] = ["--no-wrap"]
-        try:
-            run(args, encoding="utf-8", check=True, input=po_content)
-        except CalledProcessError as run_error:
-            tqdm.write(f"Error processing '{po_path}': {run_error}")
-        except FileNotFoundError as run_error:
-            tqdm.write("Error running " + " ".join(args) + f": {run_error}")
-            sys.exit(127)
-
-
-def parse_args():
+def parse_args(raw_args):
     """Parse powrap command line arguments."""
 
     def path(path_str):
@@ -94,7 +79,8 @@ def parse_args():
         epilog="""exit code:
     0:nothing to do
     1:would rewrap
-  127:error running msgcat""",
+  127:encountered error
+  """,
     )
     parser.add_argument(
         "--modified",
@@ -131,24 +117,34 @@ def parse_args():
         "--version", action="version", version="%(prog)s " + __version__
     )
     parser.add_argument(
+        "--width",
+        type=int,
+        default=80,  # TODO check
+        help="Line width",
+    )
+    parser.add_argument(
         "--no-wrap",
-        action="store_true",
-        help="see `man msgcat`, useful to sed right after.",
+        help="remove any wrapping, no matter the line length; same as --width=0",
+        action="store_const",
+        dest="width",
+        const=0,
     )
     parser.add_argument("po_files", nargs="*", help="po files.", type=path)
-    args = parser.parse_args()
+    args = parser.parse_args(raw_args)
     if not args.po_files and not args.modified:
         parser.print_help()
         sys.exit(1)
     if args.po_files and args.modified:
         parser.print_help()
         sys.exit(1)
+    if args.diff:
+        args.check = True
     return args
 
 
-def main():
-    """Powrap main entrypoint (parsing command line and all)."""
-    args = parse_args()
+def main(raw_args=sys.argv[1:]) -> int:
+    """Powrap main entrypoint (parsing command line and all). Returns an exit code."""
+    args = parse_args(raw_args)
     if args.git_root:
         os.chdir(args.git_root)
     if args.modified:
@@ -166,9 +162,5 @@ def main():
         )
     if not args.po_files:
         print("Nothing to do, exiting.")
-        sys.exit(0)
-    if args.check or args.diff:
-        errors = check_style(args.po_files, args.no_wrap, args.quiet, args.diff)
-        sys.exit(errors > 0)
-    else:
-        fix_style(args.po_files, args.no_wrap, args.quiet)
+        return 0
+    return process(args)
