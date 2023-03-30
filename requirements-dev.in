@@ -1,9 +1,0 @@
--r requirements.txt
-black
-flake8
-mypy
-pip-tools
-pylint
-pytest
-tox
-twine
