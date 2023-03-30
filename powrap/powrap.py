@@ -80,16 +80,14 @@ def parse_args():
     def path(path_str):
         path_obj = Path(path_str)
         if not path_obj.exists():
-            raise argparse.ArgumentTypeError(
-                "File {!r} does not exists.".format(path_str)
-            )
+            raise argparse.ArgumentTypeError(f"File {path_str!r} does not exists.")
         if not path_obj.is_file():
-            raise argparse.ArgumentTypeError("{!r} is not a file.".format(path_str))
+            raise argparse.ArgumentTypeError(f"{path_str!r} is not a file.")
         try:
             path_obj.read_text(encoding="utf-8")
         except PermissionError as read_error:
             raise argparse.ArgumentTypeError(
-                "{!r}: Permission denied.".format(path_str)
+                "{path_str!r}: Permission denied."
             ) from read_error
         return path_obj
 
