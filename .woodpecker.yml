@@ -1,0 +1,10 @@
+---
+
+pipeline:
+  test:
+    image: python
+    commands:
+      - apt-get update
+      - apt-get install -y gettext
+      - python3 -m pip install tox
+      - tox
