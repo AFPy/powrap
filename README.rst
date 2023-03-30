@@ -1,10 +1,13 @@
 powrap
 ======
 
-|pypi|
+|pypi| |build|
 
 .. |pypi| image:: https://img.shields.io/pypi/v/powrap.svg
    :target: https://pypi.python.org/pypi/powrap
+
+.. |build| image:: https://woodpecker.afpy.org/api/badges/AFPy/powrap/status.svg
+   :target: https://woodpecker.afpy.org/AFPy/powrap
 
 Script to fix indentation of given ``.po`` files. If ``--modified`` is
 given, it will only fix modified files according to git (useful if
