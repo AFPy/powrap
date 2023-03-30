@@ -1,3 +1,44 @@
 [build-system]
 requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "powrap"
+description = "Find and properly reindent .po files."
+readme = "README.rst"
+authors = [
+    { name = "Julien Palard", email = "julien@palard.fr" },
+]
+keywords = ["powrap", "po", "gettext", "i18n",]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3",
+]
+requires-python = ">= 3.7"
+dependencies = [
+    "tqdm",
+]
+dynamic = [
+    "version",
+]
+
+[project.license]
+text = "MIT License"
+
+[project.urls]
+Homepage = "https://github.com/AFPy/powrap"
+
+[project.scripts]
+powrap = "powrap.powrap:main"
+
+[tool.setuptools]
+packages = [
+    "powrap",
+]
+include-package-data = false
+
+[tool.setuptools.dynamic.version]
+attr = "powrap.__version__"
